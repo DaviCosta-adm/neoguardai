@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NeoGuardAI
 
-## Getting Started
+Plataforma SaaS para prevenção da evasão escolar — alertas, análise de risco e acompanhamento de casos pela coordenação.
 
-First, run the development server:
+## Stack
+
+- Next.js (App Router) + React + TypeScript
+- Tailwind CSS + Framer Motion
+- PostgreSQL (persistência)
+- OpenAI (Atlas)
+- Sessão JWT (cookie HTTP-only)
+
+## Ambiente local
+
+1. Copie as variáveis:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Configure pelo menos:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `AUTH_SECRET`
+- `DATABASE_URL` (ex.: `postgresql://neoguard:neoguard@localhost:5432/neoguardai`)
+- `OPENAI_API_KEY` (opcional, para o Atlas)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. Suba o Postgres, rode as migrations/seed e inicie o app:
 
-## Learn More
+```bash
+npm install
+npm run db:migrate
+npm run db:seed
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Abra [http://localhost:3000](http://localhost:3000).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Contas demo
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Senha: `demo123`
 
-## Deploy on Vercel
+| E-mail | Perfil |
+| --- | --- |
+| ana@horizonte.edu.br | Coordenação (Horizonte) |
+| carlos@horizonte.edu.br | Especialista (Horizonte) |
+| maria@aurora.edu.br | Coordenação (Aurora) |
+| admin@horizonte.edu.br | Admin da instituição |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Rotas
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `/` — site institucional
+- `/login` — autenticação
+- `/dashboard` — painel da coordenação
+
+## Documentação interna
+
+Veja `docs/proxima-fase.md` para a ordem de evolução do produto.

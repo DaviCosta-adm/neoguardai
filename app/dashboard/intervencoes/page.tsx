@@ -15,7 +15,14 @@ const statusStyle = {
 
 export default async function IntervencoesPage() {
   const auth = await requireAuth();
-  const itens = getIntervencoes(auth);
+  const itens = await getIntervencoes(auth);
+  const alunos = await Promise.all(
+    itens.map(async (item) => ({
+      itemId: item.id,
+      aluno: await getAlunoById(auth, item.alunoId),
+    }))
+  );
+  const alunoPorItem = new Map(alunos.map((entry) => [entry.itemId, entry.aluno]));
 
   return (
     <>
@@ -26,7 +33,7 @@ export default async function IntervencoesPage() {
 
       <div className="space-y-4 px-6 py-6">
         {itens.map((item) => {
-          const aluno = getAlunoById(auth, item.alunoId);
+          const aluno = alunoPorItem.get(item.id) ?? null;
 
           return (
             <div

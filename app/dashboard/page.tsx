@@ -12,7 +12,6 @@ import { requireAuth } from "@/app/lib/auth/dal";
 import { rotuloStatusAcompanhamento } from "@/app/lib/data/labels";
 import {
   getAlertasAtivos,
-  getAlunoById,
   getResumoDashboard,
   listarAlunosPorPrioridade,
 } from "@/app/lib/data/repository";
@@ -20,9 +19,11 @@ import { rotuloRisco } from "@/app/lib/risk/score";
 
 export default async function DashboardPage() {
   const auth = await requireAuth();
-  const resumo = getResumoDashboard(auth);
-  const prioritarios = listarAlunosPorPrioridade(auth).slice(0, 5);
-  const alertas = getAlertasAtivos(auth).slice(0, 4);
+  const resumo = await getResumoDashboard(auth);
+  const alunos = await listarAlunosPorPrioridade(auth);
+  const prioritarios = alunos.slice(0, 5);
+  const alertas = (await getAlertasAtivos(auth)).slice(0, 4);
+  const alunoPorId = new Map(alunos.map((aluno) => [aluno.id, aluno]));
 
   return (
     <>
@@ -137,7 +138,7 @@ export default async function DashboardPage() {
 
             <div className="space-y-3">
               {alertas.map((alerta) => {
-                const aluno = getAlunoById(auth, alerta.alunoId);
+                const aluno = alunoPorId.get(alerta.alunoId);
                 return (
                   <div
                     key={alerta.id}

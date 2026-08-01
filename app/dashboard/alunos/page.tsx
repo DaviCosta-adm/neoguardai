@@ -5,7 +5,7 @@ import { listarAlunosPorPrioridade } from "@/app/lib/data/repository";
 
 export default async function AlunosPage() {
   const auth = await requireAuth();
-  const alunos = listarAlunosPorPrioridade(auth);
+  const alunos = await listarAlunosPorPrioridade(auth);
 
   return (
     <>

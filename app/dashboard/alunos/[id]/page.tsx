@@ -22,13 +22,13 @@ export default async function AlunoPage({
 }) {
   const auth = await requireAuth();
   const { id } = await params;
-  const aluno = getAlunoById(auth, id);
+  const aluno = await getAlunoById(auth, id);
 
   if (!aluno) notFound();
 
-  const alertas = getAlertasDoAluno(auth, aluno.id);
-  const intervencoes = getIntervencoesDoAluno(auth, aluno.id);
-  const timeline = getTimelineDoAluno(auth, aluno.id);
+  const alertas = await getAlertasDoAluno(auth, aluno.id);
+  const intervencoes = await getIntervencoesDoAluno(auth, aluno.id);
+  const timeline = await getTimelineDoAluno(auth, aluno.id);
 
   return (
     <>

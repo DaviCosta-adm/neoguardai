@@ -5,7 +5,7 @@ import { listarUsuariosDaInstituicao } from "@/app/lib/data/repository";
 
 export default async function ConfiguracoesPage() {
   const auth = await requireAuth();
-  const usuarios = listarUsuariosDaInstituicao(auth);
+  const usuarios = await listarUsuariosDaInstituicao(auth);
 
   return (
     <>
@@ -42,8 +42,8 @@ export default async function ConfiguracoesPage() {
         </div>
 
         <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-6 text-sm text-gray-400">
-          Próximo passo: persistência em banco real (substitui o store em
-          memória) e gestão completa de permissões.
+          Dados de usuários e instituição já vêm do PostgreSQL. Próximo passo:
+          gestão completa de permissões e convites.
         </div>
       </div>
     </>

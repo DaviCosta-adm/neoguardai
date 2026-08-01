@@ -1,71 +1,39 @@
 import "server-only";
 
-import type { Instituicao, Usuario } from "@/app/lib/types";
+import { compare } from "bcryptjs";
+import { query } from "@/app/lib/db/client";
+import type { Instituicao, UserRole, Usuario } from "@/app/lib/types";
 
-export type DemoUser = Usuario & {
-  password: string;
+export type DbUser = Usuario & {
+  passwordHash: string;
 };
 
-export const instituicoes: Instituicao[] = [
-  { id: "inst-001", nome: "Colégio Horizonte" },
-  { id: "inst-002", nome: "Escola Aurora" },
-];
+type UsuarioRow = {
+  id: string;
+  nome: string;
+  email: string;
+  password_hash: string;
+  role: UserRole;
+  instituicao_id: string;
+};
 
-/** Contas demo — senha padrão: demo123 */
-export const demoUsers: DemoUser[] = [
-  {
-    id: "user-001",
-    nome: "Ana Coordenadora",
-    email: "ana@horizonte.edu.br",
-    password: "demo123",
-    role: "coordenacao",
-    instituicaoId: "inst-001",
-  },
-  {
-    id: "user-002",
-    nome: "Carlos Especialista",
-    email: "carlos@horizonte.edu.br",
-    password: "demo123",
-    role: "especialista",
-    instituicaoId: "inst-001",
-  },
-  {
-    id: "user-003",
-    nome: "Helena Admin",
-    email: "admin@horizonte.edu.br",
-    password: "demo123",
-    role: "admin_instituicao",
-    instituicaoId: "inst-001",
-  },
-  {
-    id: "user-004",
-    nome: "Maria Coordenadora",
-    email: "maria@aurora.edu.br",
-    password: "demo123",
-    role: "coordenacao",
-    instituicaoId: "inst-002",
-  },
-  {
-    id: "user-005",
-    nome: "Suporte NeoGuard",
-    email: "suporte@neoguard.ai",
-    password: "demo123",
-    role: "admin_neoguard",
-    instituicaoId: "inst-001",
-  },
-];
+type InstituicaoRow = {
+  id: string;
+  nome: string;
+};
 
-export function findUserByEmail(email: string): DemoUser | undefined {
-  return demoUsers.find(
-    (user) => user.email.toLowerCase() === email.trim().toLowerCase()
-  );
+function mapUser(row: UsuarioRow): DbUser {
+  return {
+    id: row.id,
+    nome: row.nome,
+    email: row.email,
+    passwordHash: row.password_hash,
+    role: row.role,
+    instituicaoId: row.instituicao_id,
+  };
 }
 
-export function findUserById(id: string): DemoUser | undefined {
-  return demoUsers.find((user) => user.id === id);
-}
-
-export function toPublicUser(user: DemoUser): Usuario {
+export function toPublicUser(user: DbUser | Usuario): Usuario {
   return {
     id: user.id,
     nome: user.nome,
@@ -75,6 +43,66 @@ export function toPublicUser(user: DemoUser): Usuario {
   };
 }
 
-export function getInstituicaoById(id: string): Instituicao | undefined {
-  return instituicoes.find((item) => item.id === id);
+export async function findUserByEmail(email: string): Promise<DbUser | null> {
+  const result = await query<UsuarioRow>(
+    `SELECT id, nome, email, password_hash, role, instituicao_id
+     FROM usuarios
+     WHERE lower(email) = lower($1)
+     LIMIT 1`,
+    [email.trim()]
+  );
+
+  const row = result.rows[0];
+  return row ? mapUser(row) : null;
+}
+
+export async function findUserById(id: string): Promise<DbUser | null> {
+  const result = await query<UsuarioRow>(
+    `SELECT id, nome, email, password_hash, role, instituicao_id
+     FROM usuarios
+     WHERE id = $1
+     LIMIT 1`,
+    [id]
+  );
+
+  const row = result.rows[0];
+  return row ? mapUser(row) : null;
+}
+
+export async function verifyUserPassword(
+  user: DbUser,
+  password: string
+): Promise<boolean> {
+  return compare(password, user.passwordHash);
+}
+
+export async function getInstituicaoById(
+  id: string
+): Promise<Instituicao | null> {
+  const result = await query<InstituicaoRow>(
+    `SELECT id, nome FROM instituicoes WHERE id = $1 LIMIT 1`,
+    [id]
+  );
+
+  return result.rows[0] ?? null;
+}
+
+export async function listUsuarios(options?: {
+  instituicaoId?: string;
+}): Promise<Usuario[]> {
+  const result = options?.instituicaoId
+    ? await query<UsuarioRow>(
+        `SELECT id, nome, email, password_hash, role, instituicao_id
+         FROM usuarios
+         WHERE instituicao_id = $1
+         ORDER BY nome`,
+        [options.instituicaoId]
+      )
+    : await query<UsuarioRow>(
+        `SELECT id, nome, email, password_hash, role, instituicao_id
+         FROM usuarios
+         ORDER BY nome`
+      );
+
+  return result.rows.map((row) => toPublicUser(mapUser(row)));
 }

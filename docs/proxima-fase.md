@@ -2,13 +2,23 @@
 
 Base do SaaS na seguinte ordem:
 
-1. Modelo de dados mínimo (Instituição, Usuário, Aluno, Alerta, Intervenção, Risco) ✅
+1. Modelo de dados mínimo ✅
 2. Layout do dashboard + sidebar e header ✅
-3. Home da coordenação + lista + ficha do aluno (mock tipado) ✅
+3. Home da coordenação + lista + ficha do aluno ✅
 4. Score de risco explicável + alertas + intervenções ✅
 5. Autenticação + multi-tenant ✅
-6. Persistência e integração de dados reais ← próximo (store em memória já preparado)
-7. Relatórios → módulo de especialistas → IA avançada / modelo preditivo
+6. Persistência real em PostgreSQL ✅
+7. Relatórios → módulo de especialistas → IA avançada / modelo preditivo ← próximo
+
+## Banco de dados
+
+```bash
+npm run db:setup
+```
+
+Variável obrigatória: `DATABASE_URL` (veja `.env.example`).
+
+Schema em `db/migrations/001_init.sql`.
 
 ## Auth demo
 
@@ -22,4 +32,7 @@ Senha de todas as contas: `demo123`
 | maria@aurora.edu.br | Coordenação | Escola Aurora |
 | suporte@neoguard.ai | Admin NeoGuardAI | — |
 
-Configure `AUTH_SECRET` (veja `.env.example`).
+## Observações
+
+- O app roda com Next.js + PostgreSQL em qualquer host.
+- Leituras e escritas passam pelo Postgres (store em memória removido).

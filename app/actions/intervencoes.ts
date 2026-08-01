@@ -24,7 +24,7 @@ export async function criarIntervencao(
     return { error: "Preencha tipo e descrição da intervenção." };
   }
 
-  const criada = registrarIntervencao(auth, {
+  const criada = await registrarIntervencao(auth, {
     alunoId,
     tipo,
     descricao,

@@ -30,18 +30,19 @@ export const getAuthContext = cache(async (): Promise<AuthContext | null> => {
   const session = await verifySession();
   if (!session) return null;
 
-  const demoUser = findUserById(session.userId);
-  if (!demoUser) return null;
+  const dbUser = await findUserById(session.userId);
+  if (!dbUser) return null;
 
-  const instituicao = getInstituicaoById(demoUser.instituicaoId);
-  if (!instituicao && demoUser.role !== "admin_neoguard") return null;
+  const instituicao =
+    (await getInstituicaoById(dbUser.instituicaoId)) ??
+    ({
+      id: dbUser.instituicaoId,
+      nome: "NeoGuardAI",
+    } satisfies Instituicao);
 
   return {
-    user: toPublicUser(demoUser),
-    instituicao: instituicao ?? {
-      id: demoUser.instituicaoId,
-      nome: "NeoGuardAI",
-    },
+    user: toPublicUser(dbUser),
+    instituicao,
     session,
   };
 });
