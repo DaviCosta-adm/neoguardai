@@ -8,24 +8,30 @@ import {
 import Header from "@/app/components/dashboard/Header";
 import RiskBadge from "@/app/components/dashboard/RiskBadge";
 import StatCard from "@/app/components/dashboard/StatCard";
+import { requireAuth } from "@/app/lib/auth/dal";
+import { rotuloStatusAcompanhamento } from "@/app/lib/data/labels";
 import {
   getAlertasAtivos,
   getAlunoById,
   getResumoDashboard,
   listarAlunosPorPrioridade,
-  rotuloStatusAcompanhamento,
-} from "@/app/lib/data/mock";
+} from "@/app/lib/data/repository";
 import { rotuloRisco } from "@/app/lib/risk/score";
 
-export default function DashboardPage() {
-  const resumo = getResumoDashboard();
-  const prioritarios = listarAlunosPorPrioridade().slice(0, 5);
-  const alertas = getAlertasAtivos().slice(0, 4);
+export default async function DashboardPage() {
+  const auth = await requireAuth();
+  const resumo = getResumoDashboard(auth);
+  const prioritarios = listarAlunosPorPrioridade(auth).slice(0, 5);
+  const alertas = getAlertasAtivos(auth).slice(0, 4);
 
   return (
     <>
       <Header
-        title="Painel da coordenação"
+        title={
+          auth.user.role === "especialista"
+            ? "Casos encaminhados"
+            : "Painel da coordenação"
+        }
         subtitle="Quais alunos estão em risco e o que precisa de atenção agora."
       />
 
@@ -108,23 +114,30 @@ export default function DashboardPage() {
                   />
                 </Link>
               ))}
+              {prioritarios.length === 0 ? (
+                <p className="text-sm text-gray-500">
+                  Nenhum caso disponível para este perfil.
+                </p>
+              ) : null}
             </div>
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold">Novos alertas</h2>
-              <Link
-                href="/dashboard/alertas"
-                className="text-sm text-cyan-300 hover:text-cyan-200"
-              >
-                Ver alertas
-              </Link>
+              {auth.user.role !== "especialista" ? (
+                <Link
+                  href="/dashboard/alertas"
+                  className="text-sm text-cyan-300 hover:text-cyan-200"
+                >
+                  Ver alertas
+                </Link>
+              ) : null}
             </div>
 
             <div className="space-y-3">
               {alertas.map((alerta) => {
-                const aluno = getAlunoById(alerta.alunoId);
+                const aluno = getAlunoById(auth, alerta.alunoId);
                 return (
                   <div
                     key={alerta.id}
@@ -146,6 +159,9 @@ export default function DashboardPage() {
                   </div>
                 );
               })}
+              {alertas.length === 0 ? (
+                <p className="text-sm text-gray-500">Sem alertas ativos.</p>
+              ) : null}
             </div>
           </div>
         </section>

@@ -1,29 +1,34 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Header from "@/app/components/dashboard/Header";
+import IntervencaoForm from "@/app/components/dashboard/IntervencaoForm";
 import RiskBadge from "@/app/components/dashboard/RiskBadge";
+import { requireAuth } from "@/app/lib/auth/dal";
+import {
+  rotuloIntervencao,
+  rotuloStatusAcompanhamento,
+} from "@/app/lib/data/labels";
 import {
   getAlertasDoAluno,
   getAlunoById,
   getIntervencoesDoAluno,
   getTimelineDoAluno,
-  rotuloIntervencao,
-  rotuloStatusAcompanhamento,
-} from "@/app/lib/data/mock";
+} from "@/app/lib/data/repository";
 
 export default async function AlunoPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const auth = await requireAuth();
   const { id } = await params;
-  const aluno = getAlunoById(id);
+  const aluno = getAlunoById(auth, id);
 
   if (!aluno) notFound();
 
-  const alertas = getAlertasDoAluno(aluno.id);
-  const intervencoes = getIntervencoesDoAluno(aluno.id);
-  const timeline = getTimelineDoAluno(aluno.id);
+  const alertas = getAlertasDoAluno(auth, aluno.id);
+  const intervencoes = getIntervencoesDoAluno(auth, aluno.id);
+  const timeline = getTimelineDoAluno(auth, aluno.id);
 
   return (
     <>
@@ -151,42 +156,29 @@ export default async function AlunoPage({
             </div>
           </Panel>
 
-          <Panel title="Linha do tempo do caso">
-            <div className="space-y-3">
-              {timeline.map((evento) => (
-                <div
-                  key={evento.id}
-                  className="border-l border-cyan-400/30 pl-4"
-                >
-                  <p className="text-xs text-gray-500">
-                    {new Date(evento.criadoEm).toLocaleString("pt-BR")}
-                  </p>
-                  <p className="mt-1 font-medium">{evento.titulo}</p>
-                  <p className="mt-1 text-sm text-gray-400">
-                    {evento.descricao}
-                  </p>
-                </div>
-              ))}
-              {timeline.length === 0 ? (
-                <p className="text-sm text-gray-500">
-                  Sem eventos registrados ainda.
-                </p>
-              ) : null}
-            </div>
+          <Panel title="Registrar nova intervenção">
+            <IntervencaoForm alunoId={aluno.id} />
           </Panel>
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-          <h3 className="text-lg font-semibold">Próximos passos sugeridos</h3>
-          <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-gray-300">
-            <li>Revisar alertas ativos e fatores de risco com a equipe.</li>
-            <li>Registrar uma intervenção ou agendar revisão do caso.</li>
-            <li>
-              Encaminhar para especialista se o risco permanecer alto ou
-              crítico.
-            </li>
-          </ol>
-        </section>
+        <Panel title="Linha do tempo do caso">
+          <div className="space-y-3">
+            {timeline.map((evento) => (
+              <div key={evento.id} className="border-l border-cyan-400/30 pl-4">
+                <p className="text-xs text-gray-500">
+                  {new Date(evento.criadoEm).toLocaleString("pt-BR")}
+                </p>
+                <p className="mt-1 font-medium">{evento.titulo}</p>
+                <p className="mt-1 text-sm text-gray-400">{evento.descricao}</p>
+              </div>
+            ))}
+            {timeline.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                Sem eventos registrados ainda.
+              </p>
+            ) : null}
+          </div>
+        </Panel>
       </div>
     </>
   );

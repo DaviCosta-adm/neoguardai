@@ -1,20 +1,23 @@
-import Link from "next/link";
 import { Bell, Search } from "lucide-react";
-import { instituicaoAtual, usuarioAtual } from "@/app/lib/data/mock";
+import { logout } from "@/app/actions/auth";
+import { requireAuth } from "@/app/lib/auth/dal";
+import { rotuloRole } from "@/app/lib/data/labels";
 
-export default function Header({
+export default async function Header({
   title,
   subtitle,
 }: {
   title: string;
   subtitle?: string;
 }) {
+  const auth = await requireAuth();
+
   return (
     <header className="sticky top-0 z-20 border-b border-white/10 bg-[#050816]/80 px-6 py-4 backdrop-blur-xl">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.25em] text-cyan-400/80">
-            {instituicaoAtual.nome}
+            {auth.instituicao.nome}
           </p>
           <h1 className="mt-1 text-2xl font-semibold text-white">{title}</h1>
           {subtitle ? (
@@ -36,12 +39,19 @@ export default function Header({
             <Bell size={16} />
           </button>
 
-          <Link
-            href="/login"
-            className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-gray-200 transition hover:border-cyan-400/30"
-          >
-            {usuarioAtual.nome}
-          </Link>
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-gray-200">
+            <p className="font-medium">{auth.user.nome}</p>
+            <p className="text-xs text-gray-500">{rotuloRole[auth.user.role]}</p>
+          </div>
+
+          <form action={logout}>
+            <button
+              type="submit"
+              className="rounded-xl border border-white/10 px-3 py-2 text-sm text-gray-300 transition hover:border-rose-400/30 hover:text-rose-300"
+            >
+              Sair
+            </button>
+          </form>
         </div>
       </div>
     </header>

@@ -1,10 +1,18 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import Header from "@/app/components/dashboard/Header";
 import RiskBadge from "@/app/components/dashboard/RiskBadge";
-import { getAlertasAtivos, getAlunoById } from "@/app/lib/data/mock";
+import { requireAuth } from "@/app/lib/auth/dal";
+import { getAlertasAtivos, getAlunoById } from "@/app/lib/data/repository";
 
-export default function AlertasPage() {
-  const alertas = getAlertasAtivos();
+export default async function AlertasPage() {
+  const auth = await requireAuth();
+
+  if (auth.user.role === "especialista") {
+    redirect("/dashboard");
+  }
+
+  const alertas = getAlertasAtivos(auth);
 
   return (
     <>
@@ -15,7 +23,7 @@ export default function AlertasPage() {
 
       <div className="space-y-4 px-6 py-6">
         {alertas.map((alerta) => {
-          const aluno = getAlunoById(alerta.alunoId);
+          const aluno = getAlunoById(auth, alerta.alunoId);
 
           return (
             <div
@@ -47,6 +55,9 @@ export default function AlertasPage() {
             </div>
           );
         })}
+        {alertas.length === 0 ? (
+          <p className="text-sm text-gray-500">Nenhum alerta ativo.</p>
+        ) : null}
       </div>
     </>
   );

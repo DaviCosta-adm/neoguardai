@@ -12,8 +12,9 @@ import {
   Settings,
   Users,
 } from "lucide-react";
+import type { UserRole } from "@/app/lib/types";
 
-const links = [
+const allLinks = [
   { href: "/dashboard", label: "Visão geral", icon: LayoutDashboard },
   { href: "/dashboard/alunos", label: "Alunos", icon: Users },
   { href: "/dashboard/alertas", label: "Alertas", icon: AlertTriangle },
@@ -27,8 +28,21 @@ const links = [
   { href: "/dashboard/configuracoes", label: "Configurações", icon: Settings },
 ];
 
-export default function Sidebar() {
+function linksForRole(role: UserRole) {
+  if (role === "especialista") {
+    return allLinks.filter((link) =>
+      ["/dashboard", "/dashboard/alunos", "/dashboard/intervencoes"].includes(
+        link.href
+      )
+    );
+  }
+
+  return allLinks;
+}
+
+export default function Sidebar({ role }: { role: UserRole }) {
   const pathname = usePathname();
+  const links = linksForRole(role);
 
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col border-r border-white/10 bg-[#070b1a]/90 backdrop-blur-xl">
@@ -71,7 +85,7 @@ export default function Sidebar() {
       </nav>
 
       <div className="border-t border-white/10 px-4 py-4 text-xs text-gray-500">
-        Dados simulados · v1
+        Sessão autenticada · multi-tenant
       </div>
     </aside>
   );

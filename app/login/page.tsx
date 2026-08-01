@@ -1,4 +1,5 @@
 import Link from "next/link";
+import LoginForm from "@/app/components/auth/LoginForm";
 
 export default function LoginPage() {
   return (
@@ -9,24 +10,18 @@ export default function LoginPage() {
         </p>
         <h1 className="mt-3 text-3xl font-semibold">Entrar no sistema</h1>
         <p className="mt-3 text-sm leading-6 text-gray-400">
-          A autenticação e o multi-tenant entram na próxima etapa da base SaaS,
-          depois do fluxo operacional com dados simulados.
+          Acesso multi-tenant por instituição e perfil. Sessão protegida por
+          cookie HTTP-only.
         </p>
 
-        <div className="mt-8 space-y-3">
-          <Link
-            href="/dashboard"
-            className="flex w-full items-center justify-center rounded-xl bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-gray-100"
-          >
-            Acessar dashboard (demo)
-          </Link>
-          <Link
-            href="/"
-            className="flex w-full items-center justify-center rounded-xl border border-white/10 px-4 py-3 text-sm text-gray-300 transition hover:border-cyan-400/30"
-          >
-            Voltar ao site
-          </Link>
-        </div>
+        <LoginForm />
+
+        <Link
+          href="/"
+          className="mt-6 flex w-full items-center justify-center rounded-xl border border-white/10 px-4 py-3 text-sm text-gray-300 transition hover:border-cyan-400/30"
+        >
+          Voltar ao site
+        </Link>
       </div>
     </main>
   );
