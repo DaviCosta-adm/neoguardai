@@ -8,7 +8,9 @@ Base do SaaS na seguinte ordem:
 4. Score de risco explicável + alertas + intervenções ✅
 5. Autenticação + multi-tenant ✅
 6. Persistência real em PostgreSQL ✅
-7. Relatórios → módulo de especialistas → IA avançada / modelo preditivo ← próximo
+7. Relatórios ✅
+8. Módulo de especialistas ← próximo
+9. IA avançada / modelo preditivo
 
 ## Banco de dados
 
