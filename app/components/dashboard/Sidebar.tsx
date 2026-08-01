@@ -42,6 +42,7 @@ function linksForRole(role: UserRole) {
         "/dashboard/alunos",
         "/dashboard/intervencoes",
         "/dashboard/especialistas",
+        "/dashboard/atlas",
       ].includes(link.href)
     );
   }
