@@ -12,7 +12,16 @@ export default async function AlertasPage() {
     redirect("/dashboard");
   }
 
-  const alertas = getAlertasAtivos(auth);
+  const alertas = await getAlertasAtivos(auth);
+  const alunos = await Promise.all(
+    alertas.map(async (alerta) => ({
+      alertaId: alerta.id,
+      aluno: await getAlunoById(auth, alerta.alunoId),
+    }))
+  );
+  const alunoPorAlerta = new Map(
+    alunos.map((item) => [item.alertaId, item.aluno])
+  );
 
   return (
     <>
@@ -23,7 +32,7 @@ export default async function AlertasPage() {
 
       <div className="space-y-4 px-6 py-6">
         {alertas.map((alerta) => {
-          const aluno = getAlunoById(auth, alerta.alunoId);
+          const aluno = alunoPorAlerta.get(alerta.id) ?? null;
 
           return (
             <div

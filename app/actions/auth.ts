@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createSession, deleteSession } from "@/app/lib/auth/session";
-import { findUserByEmail } from "@/app/lib/auth/users";
+import { findUserByEmail, verifyUserPassword } from "@/app/lib/auth/users";
 
 export type LoginState = {
   error?: string;
@@ -19,9 +19,9 @@ export async function login(
     return { error: "Informe e-mail e senha." };
   }
 
-  const user = findUserByEmail(email);
+  const user = await findUserByEmail(email);
 
-  if (!user || user.password !== password) {
+  if (!user || !(await verifyUserPassword(user, password))) {
     return { error: "Credenciais inválidas." };
   }
 

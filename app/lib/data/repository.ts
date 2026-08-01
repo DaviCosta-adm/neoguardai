@@ -1,8 +1,19 @@
 import "server-only";
 
 import type { AuthContext } from "@/app/lib/auth/dal";
+import { listUsuarios } from "@/app/lib/auth/users";
 import { prioridadeRisco } from "@/app/lib/data/labels";
-import { getStore } from "@/app/lib/data/store";
+import {
+  mapAlerta,
+  mapAluno,
+  mapIntervencao,
+  mapTimeline,
+  type AlertaRow,
+  type AlunoRow,
+  type IntervencaoRow,
+  type TimelineRow,
+} from "@/app/lib/data/mappers";
+import { query } from "@/app/lib/db/client";
 import type {
   Alerta,
   Aluno,
@@ -12,102 +23,157 @@ import type {
   TipoIntervencao,
   Usuario,
 } from "@/app/lib/types";
-import { demoUsers, toPublicUser } from "@/app/lib/auth/users";
 
-function scopedAlunos(auth: AuthContext): Aluno[] {
-  const { alunos } = getStore();
-  const daInstituicao = alunos.filter(
-    (aluno) => aluno.instituicaoId === auth.user.instituicaoId
-  );
-
-  if (auth.user.role === "especialista") {
-    return daInstituicao.filter(
-      (aluno) => aluno.statusAcompanhamento === "encaminhado"
-    );
-  }
+function alunosScopeSql(
+  auth: AuthContext,
+  alias = ""
+): {
+  where: string;
+  params: unknown[];
+} {
+  const col = (name: string) => (alias ? `${alias}.${name}` : name);
 
   if (auth.user.role === "admin_neoguard") {
-    return [...alunos];
+    return { where: "TRUE", params: [] };
   }
 
-  return daInstituicao;
+  if (auth.user.role === "especialista") {
+    return {
+      where: `${col("instituicao_id")} = $1 AND ${col("status_acompanhamento")} = 'encaminhado'`,
+      params: [auth.user.instituicaoId],
+    };
+  }
+
+  return {
+    where: `${col("instituicao_id")} = $1`,
+    params: [auth.user.instituicaoId],
+  };
 }
 
-function alunoIdsPermitidos(auth: AuthContext): Set<string> {
-  return new Set(scopedAlunos(auth).map((aluno) => aluno.id));
+export async function listarAlunosPorPrioridade(
+  auth: AuthContext
+): Promise<Aluno[]> {
+  const scope = alunosScopeSql(auth);
+  const result = await query<AlunoRow>(
+    `SELECT * FROM alunos WHERE ${scope.where}`,
+    scope.params
+  );
+
+  return result.rows
+    .map(mapAluno)
+    .sort((a, b) => {
+      const diff = prioridadeRisco[a.riscoNivel] - prioridadeRisco[b.riscoNivel];
+      if (diff !== 0) return diff;
+      return b.riscoPercentual - a.riscoPercentual;
+    });
 }
 
-export function listarAlunosPorPrioridade(auth: AuthContext): Aluno[] {
-  return [...scopedAlunos(auth)].sort((a, b) => {
-    const diff = prioridadeRisco[a.riscoNivel] - prioridadeRisco[b.riscoNivel];
-    if (diff !== 0) return diff;
-    return b.riscoPercentual - a.riscoPercentual;
-  });
-}
-
-export function getAlunoById(
+export async function getAlunoById(
   auth: AuthContext,
   id: string
-): Aluno | undefined {
-  return scopedAlunos(auth).find((aluno) => aluno.id === id);
-}
+): Promise<Aluno | null> {
+  const scope = alunosScopeSql(auth);
+  const params = [...scope.params, id];
+  const idParam = `$${params.length}`;
 
-export function getAlertasDoAluno(
-  auth: AuthContext,
-  alunoId: string
-): Alerta[] {
-  if (!alunoIdsPermitidos(auth).has(alunoId)) return [];
-
-  return getStore().alertas.filter(
-    (alerta) => alerta.alunoId === alunoId && alerta.ativo
+  const result = await query<AlunoRow>(
+    `SELECT * FROM alunos WHERE ${scope.where} AND id = ${idParam} LIMIT 1`,
+    params
   );
+
+  const row = result.rows[0];
+  return row ? mapAluno(row) : null;
 }
 
-export function getIntervencoesDoAluno(
+export async function getAlertasDoAluno(
   auth: AuthContext,
   alunoId: string
-): Intervencao[] {
-  if (!alunoIdsPermitidos(auth).has(alunoId)) return [];
+): Promise<Alerta[]> {
+  const aluno = await getAlunoById(auth, alunoId);
+  if (!aluno) return [];
 
-  return getStore().intervencoes.filter((item) => item.alunoId === alunoId);
+  const result = await query<AlertaRow>(
+    `SELECT * FROM alertas
+     WHERE aluno_id = $1 AND ativo = TRUE
+     ORDER BY criado_em DESC`,
+    [alunoId]
+  );
+
+  return result.rows.map(mapAlerta);
 }
 
-export function getTimelineDoAluno(
+export async function getIntervencoesDoAluno(
   auth: AuthContext,
   alunoId: string
-): TimelineEvent[] {
-  if (!alunoIdsPermitidos(auth).has(alunoId)) return [];
+): Promise<Intervencao[]> {
+  const aluno = await getAlunoById(auth, alunoId);
+  if (!aluno) return [];
 
-  return getStore()
-    .timeline.filter((evento) => evento.alunoId === alunoId)
-    .sort((a, b) => +new Date(b.criadoEm) - +new Date(a.criadoEm));
+  const result = await query<IntervencaoRow>(
+    `SELECT * FROM intervencoes
+     WHERE aluno_id = $1
+     ORDER BY realizado_em DESC`,
+    [alunoId]
+  );
+
+  return result.rows.map(mapIntervencao);
 }
 
-export function getAlertasAtivos(auth: AuthContext): Alerta[] {
-  const ids = alunoIdsPermitidos(auth);
+export async function getTimelineDoAluno(
+  auth: AuthContext,
+  alunoId: string
+): Promise<TimelineEvent[]> {
+  const aluno = await getAlunoById(auth, alunoId);
+  if (!aluno) return [];
 
-  return [...getStore().alertas]
-    .filter((alerta) => alerta.ativo && ids.has(alerta.alunoId))
+  const result = await query<TimelineRow>(
+    `SELECT * FROM timeline_events
+     WHERE aluno_id = $1
+     ORDER BY criado_em DESC`,
+    [alunoId]
+  );
+
+  return result.rows.map(mapTimeline);
+}
+
+export async function getAlertasAtivos(auth: AuthContext): Promise<Alerta[]> {
+  const scope = alunosScopeSql(auth, "al");
+  const result = await query<AlertaRow>(
+    `SELECT a.*
+     FROM alertas a
+     INNER JOIN alunos al ON al.id = a.aluno_id
+     WHERE a.ativo = TRUE AND (${scope.where})
+     ORDER BY a.criado_em DESC`,
+    scope.params
+  );
+
+  return result.rows
+    .map(mapAlerta)
     .sort((a, b) => prioridadeRisco[a.nivel] - prioridadeRisco[b.nivel]);
 }
 
-export function getIntervencoes(auth: AuthContext): Intervencao[] {
-  const ids = alunoIdsPermitidos(auth);
+export async function getIntervencoes(
+  auth: AuthContext
+): Promise<Intervencao[]> {
+  const scope = alunosScopeSql(auth, "al");
+  const result = await query<IntervencaoRow>(
+    `SELECT i.*
+     FROM intervencoes i
+     INNER JOIN alunos al ON al.id = i.aluno_id
+     WHERE (${scope.where})
+     ORDER BY i.realizado_em DESC`,
+    scope.params
+  );
 
-  return [...getStore().intervencoes]
-    .filter((item) => ids.has(item.alunoId))
-    .sort((a, b) => +new Date(b.realizadoEm) - +new Date(a.realizadoEm));
+  return result.rows.map(mapIntervencao);
 }
 
-export function getResumoDashboard(auth: AuthContext): DashboardResumo {
-  const alunos = scopedAlunos(auth);
-  const ids = new Set(alunos.map((aluno) => aluno.id));
-  const intervencoes = getStore().intervencoes.filter((item) =>
-    ids.has(item.alunoId)
-  );
-  const alertas = getStore().alertas.filter(
-    (alerta) => alerta.ativo && ids.has(alerta.alunoId)
-  );
+export async function getResumoDashboard(
+  auth: AuthContext
+): Promise<DashboardResumo> {
+  const alunos = await listarAlunosPorPrioridade(auth);
+  const alertas = await getAlertasAtivos(auth);
+  const intervencoes = await getIntervencoes(auth);
 
   const frequenciaMedia =
     alunos.reduce((acc, aluno) => acc + aluno.frequencia, 0) /
@@ -130,7 +196,9 @@ export function getResumoDashboard(auth: AuthContext): DashboardResumo {
   };
 }
 
-export function listarUsuariosDaInstituicao(auth: AuthContext): Usuario[] {
+export async function listarUsuariosDaInstituicao(
+  auth: AuthContext
+): Promise<Usuario[]> {
   if (
     auth.user.role !== "admin_instituicao" &&
     auth.user.role !== "admin_neoguard" &&
@@ -140,15 +208,13 @@ export function listarUsuariosDaInstituicao(auth: AuthContext): Usuario[] {
   }
 
   if (auth.user.role === "admin_neoguard") {
-    return demoUsers.map(toPublicUser);
+    return listUsuarios();
   }
 
-  return demoUsers
-    .filter((user) => user.instituicaoId === auth.user.instituicaoId)
-    .map(toPublicUser);
+  return listUsuarios({ instituicaoId: auth.user.instituicaoId });
 }
 
-export function registrarIntervencao(
+export async function registrarIntervencao(
   auth: AuthContext,
   input: {
     alunoId: string;
@@ -157,44 +223,67 @@ export function registrarIntervencao(
     status?: Intervencao["status"];
     proximaRevisao?: string;
   }
-): Intervencao | null {
-  const aluno = getAlunoById(auth, input.alunoId);
+): Promise<Intervencao | null> {
+  const aluno = await getAlunoById(auth, input.alunoId);
   if (!aluno) return null;
 
-  if (auth.user.role === "especialista" && !input.descricao.trim()) {
-    return null;
-  }
+  const descricao = input.descricao.trim();
+  if (!descricao) return null;
 
-  const store = getStore();
+  const id = `int-${crypto.randomUUID()}`;
+  const timelineId = `tl-${crypto.randomUUID()}`;
   const agora = new Date().toISOString();
-  const intervencao: Intervencao = {
-    id: `int-${crypto.randomUUID()}`,
-    alunoId: input.alunoId,
-    tipo: input.tipo,
-    descricao: input.descricao.trim(),
-    realizadoPor: auth.user.nome,
-    realizadoEm: agora,
-    status: input.status ?? "concluida",
-    proximaRevisao: input.proximaRevisao,
-  };
+  const status = input.status ?? "concluida";
 
-  store.intervencoes.unshift(intervencao);
-  store.timeline.unshift({
-    id: `tl-${crypto.randomUUID()}`,
-    alunoId: input.alunoId,
-    tipo:
+  await query(
+    `INSERT INTO intervencoes
+      (id, aluno_id, tipo, descricao, realizado_por, realizado_em, status, proxima_revisao)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+    [
+      id,
+      input.alunoId,
+      input.tipo,
+      descricao,
+      auth.user.nome,
+      agora,
+      status,
+      input.proximaRevisao ?? null,
+    ]
+  );
+
+  await query(
+    `INSERT INTO timeline_events
+      (id, aluno_id, tipo, titulo, descricao, criado_em)
+     VALUES ($1,$2,$3,$4,$5,$6)`,
+    [
+      timelineId,
+      input.alunoId,
       input.tipo === "encaminhamento_especialista"
         ? "encaminhamento"
         : "intervencao",
-    titulo: "Nova intervenção registrada",
-    descricao: intervencao.descricao,
-    criadoEm: agora,
-  });
+      "Nova intervenção registrada",
+      descricao,
+      agora,
+    ]
+  );
 
   if (input.tipo === "encaminhamento_especialista") {
-    const alvo = store.alunos.find((item) => item.id === aluno.id);
-    if (alvo) alvo.statusAcompanhamento = "encaminhado";
+    await query(
+      `UPDATE alunos
+       SET status_acompanhamento = 'encaminhado', atualizado_em = $2
+       WHERE id = $1`,
+      [input.alunoId, agora]
+    );
   }
 
-  return intervencao;
+  return {
+    id,
+    alunoId: input.alunoId,
+    tipo: input.tipo,
+    descricao,
+    realizadoPor: auth.user.nome,
+    realizadoEm: agora,
+    status,
+    proximaRevisao: input.proximaRevisao,
+  };
 }
