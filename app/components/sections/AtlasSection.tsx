@@ -124,7 +124,7 @@ export default function AtlasSection() {
 
             <br />
 
-            por trás da segurança.
+            contra a evasão escolar.
 
           </h2>
 
@@ -148,9 +148,8 @@ export default function AtlasSection() {
           >
 
             Atlas é a inteligência artificial do NeoGuardAI.
-            Ele combina análise inteligente, monitoramento
-            avançado e tecnologia preditiva para transformar
-            escolas em ambientes mais seguros.
+            Ele explica riscos, interpreta indicadores e ajuda
+            a coordenação a decidir a próxima ação preventiva.
 
           </p>
 

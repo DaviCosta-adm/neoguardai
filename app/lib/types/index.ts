@@ -1,0 +1,111 @@
+/** Modelo de domínio mínimo do NeoGuardAI (pré-persistência). */
+
+export type UserRole =
+  | "coordenacao"
+  | "especialista"
+  | "admin_instituicao"
+  | "admin_neoguard";
+
+export type RiskLevel = "baixo" | "medio" | "alto" | "critico";
+
+export type AcompanhamentoStatus =
+  | "novo"
+  | "em_acompanhamento"
+  | "encaminhado"
+  | "estavel"
+  | "critico";
+
+export type TipoIntervencao =
+  | "conversa_aluno"
+  | "contato_familia"
+  | "reuniao"
+  | "acompanhamento_semanal"
+  | "encaminhamento_especialista"
+  | "plano_permanencia"
+  | "revisao_caso";
+
+export type StatusIntervencao = "pendente" | "concluida" | "agendada";
+
+export type TimelineTipo =
+  | "alerta"
+  | "intervencao"
+  | "observacao"
+  | "encaminhamento"
+  | "atualizacao_risco";
+
+export interface Instituicao {
+  id: string;
+  nome: string;
+}
+
+export interface Usuario {
+  id: string;
+  nome: string;
+  email: string;
+  role: UserRole;
+  instituicaoId: string;
+}
+
+export interface IndicadoresAluno {
+  frequencia: number;
+  desempenho: number;
+  faltasConsecutivas: number;
+  ocorrencias: number;
+  participacao: number;
+}
+
+export interface Aluno extends IndicadoresAluno {
+  id: string;
+  instituicaoId: string;
+  nome: string;
+  turma: string;
+  serie: string;
+  riscoPercentual: number;
+  riscoNivel: RiskLevel;
+  fatoresRisco: string[];
+  explicacaoAtlas: string;
+  statusAcompanhamento: AcompanhamentoStatus;
+  atualizadoEm: string;
+}
+
+export interface Alerta {
+  id: string;
+  alunoId: string;
+  titulo: string;
+  descricao: string;
+  nivel: RiskLevel;
+  criadoEm: string;
+  ativo: boolean;
+}
+
+export interface Intervencao {
+  id: string;
+  alunoId: string;
+  tipo: TipoIntervencao;
+  descricao: string;
+  realizadoPor: string;
+  realizadoEm: string;
+  status: StatusIntervencao;
+  proximaRevisao?: string;
+}
+
+export interface TimelineEvent {
+  id: string;
+  alunoId: string;
+  tipo: TimelineTipo;
+  titulo: string;
+  descricao: string;
+  criadoEm: string;
+}
+
+export interface DashboardResumo {
+  totalEstudantes: number;
+  riscoBaixo: number;
+  riscoMedio: number;
+  riscoAlto: number;
+  riscoCritico: number;
+  novosAlertas: number;
+  casosImediatos: number;
+  frequenciaMedia: number;
+  intervencoesPendentes: number;
+}

@@ -5,22 +5,22 @@ import { motion } from "framer-motion";
 
 const stats = [
   {
-    title: "Threat Detection",
-    value: "98.7%",
+    title: "Risk Detection",
+    value: "Antecipação",
     description:
-      "Precisão na identificação de padrões e situações importantes.",
+      "Identificação precoce de estudantes com sinais de risco de evasão.",
   },
   {
-    title: "Response Time",
-    value: "0.8s",
+    title: "Case Focus",
+    value: "Prioridade",
     description:
-      "Tempo médio de análise e geração de alertas inteligentes.",
+      "Alertas e casos organizados para a coordenação agir com foco.",
   },
   {
-    title: "Active Systems",
-    value: "24/7",
+    title: "Action Tracking",
+    value: "Contínuo",
     description:
-      "Monitoramento contínuo utilizando inteligência artificial.",
+      "Acompanhamento de intervenções e evolução do risco ao longo do tempo.",
   },
 ];
 
@@ -122,9 +122,8 @@ export default function Dashboard() {
           "
         >
 
-          O NeoGuardAI transforma informações em decisões
-          rápidas através de análise inteligente e tecnologia
-          preditiva.
+          O NeoGuardAI transforma indicadores educacionais em
+          alertas, análises e ações preventivas contra a evasão.
 
         </p>
 

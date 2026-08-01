@@ -5,28 +5,28 @@ import { motion } from "framer-motion";
 
 const features = [
   {
-    title: "AI Monitoring",
+    title: "Risk Scoring",
     description:
-      "Monitoramento inteligente capaz de analisar ambientes escolares e identificar padrões importantes.",
-    tag: "VISION SYSTEM",
+      "Pontuação explicável que combina frequência, desempenho e outros sinais de risco de evasão.",
+    tag: "RISK ENGINE",
   },
   {
     title: "Smart Alerts",
     description:
-      "Alertas automáticos auxiliam equipes responsáveis com informações rápidas e precisas.",
+      "Alertas automáticos priorizam os casos que a coordenação precisa acompanhar primeiro.",
     tag: "REAL TIME",
   },
   {
-    title: "Predictive Analysis",
+    title: "Case Follow-up",
     description:
-      "A inteligência artificial interpreta dados para antecipar possíveis situações.",
-    tag: "AI ENGINE",
+      "Registro de intervenções, linha do tempo e próximos passos para cada estudante.",
+    tag: "ACTION LOOP",
   },
   {
-    title: "Secure Data",
+    title: "Atlas Assistant",
     description:
-      "Proteção avançada para manter informações organizadas e seguras.",
-    tag: "SECURITY",
+      "O Atlas explica por que o aluno foi sinalizado e sugere ações preventivas objetivas.",
+    tag: "AI GUIDE",
   },
 ];
 
@@ -112,7 +112,7 @@ export default function Features() {
 
           <br />
 
-          para ambientes seguros.
+          para prevenir a evasão.
 
         </h2>
 
@@ -130,8 +130,9 @@ export default function Features() {
           "
         >
 
-          Uma plataforma completa que une inteligência artificial,
-          análise de dados e segurança para transformar escolas.
+          Uma plataforma que une inteligência artificial,
+          análise de dados e acompanhamento de casos para
+          fortalecer a permanência escolar.
 
         </p>
 

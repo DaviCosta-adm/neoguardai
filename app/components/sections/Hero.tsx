@@ -73,7 +73,7 @@ md:px-8
 
             <br />
 
-            para ambientes mais seguros.
+            contra a evasão escolar.
           </h1>
 
           <p
@@ -88,8 +88,8 @@ md:px-8
               lg:mx-0
             "
           >
-            Uma nova geração de segurança utilizando inteligência
-            artificial, análise preditiva e o poder do Atlas.
+            Identifique estudantes em risco com antecedência e ajude a
+            coordenação a agir antes que o abandono aconteça.
           </p>
 
           <motion.a

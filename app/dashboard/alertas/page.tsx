@@ -1,0 +1,53 @@
+import Link from "next/link";
+import Header from "@/app/components/dashboard/Header";
+import RiskBadge from "@/app/components/dashboard/RiskBadge";
+import { getAlertasAtivos, getAlunoById } from "@/app/lib/data/mock";
+
+export default function AlertasPage() {
+  const alertas = getAlertasAtivos();
+
+  return (
+    <>
+      <Header
+        title="Alertas prioritários"
+        subtitle="Casos que precisam da atenção da coordenação agora."
+      />
+
+      <div className="space-y-4 px-6 py-6">
+        {alertas.map((alerta) => {
+          const aluno = getAlunoById(alerta.alunoId);
+
+          return (
+            <div
+              key={alerta.id}
+              className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
+            >
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-lg font-semibold">{alerta.titulo}</h2>
+                    <RiskBadge nivel={alerta.nivel} />
+                  </div>
+                  <p className="mt-2 text-sm text-gray-400">{alerta.descricao}</p>
+                  <p className="mt-3 text-xs text-gray-500">
+                    {new Date(alerta.criadoEm).toLocaleString("pt-BR")}
+                    {aluno ? ` · ${aluno.nome} · ${aluno.turma}` : ""}
+                  </p>
+                </div>
+
+                {aluno ? (
+                  <Link
+                    href={`/dashboard/alunos/${aluno.id}`}
+                    className="rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-200 transition hover:bg-cyan-400/15"
+                  >
+                    Abrir caso
+                  </Link>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
