@@ -1,0 +1,22 @@
+import MobileNav from "@/app/components/dashboard/MobileNav";
+import Sidebar from "@/app/components/dashboard/Sidebar";
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="min-h-screen bg-[#050816] text-white">
+      <div className="flex min-h-screen">
+        <div className="hidden md:block">
+          <Sidebar />
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col pb-20 md:pb-0">
+          {children}
+        </div>
+      </div>
+      <MobileNav />
+    </div>
+  );
+}

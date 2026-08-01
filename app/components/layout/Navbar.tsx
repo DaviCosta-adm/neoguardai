@@ -208,7 +208,7 @@ export default function Navbar() {
         {/* Botão */}
         <motion.a
 
-          href="#contato"
+          href="/login"
 
           whileHover={{
             scale:1.05,
@@ -230,7 +230,7 @@ export default function Navbar() {
 
         >
 
-          Começar
+          Acessar sistema
 
         </motion.a>
 

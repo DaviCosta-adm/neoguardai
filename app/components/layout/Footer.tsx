@@ -122,8 +122,8 @@ export default function Footer() {
             >
 
               Inteligência artificial criada para
-              transformar ambientes escolares em
-              espaços mais seguros e inteligentes.
+              identificar risco de evasão e apoiar
+              a coordenação com ações preventivas.
 
             </p>
 

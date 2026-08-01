@@ -92,11 +92,11 @@ export default function CTA() {
           "
         >
 
-          Pronto para transformar
+          Pronto para reduzir
 
           <br />
 
-          a segurança?
+          a evasão escolar?
 
         </h2>
 
@@ -119,8 +119,8 @@ export default function CTA() {
         >
 
           Descubra como a inteligência artificial pode
-          criar ambientes mais seguros, inteligentes e
-          preparados para o futuro.
+          antecipar riscos, orientar intervenções e fortalecer
+          a permanência dos estudantes.
 
         </p>
 

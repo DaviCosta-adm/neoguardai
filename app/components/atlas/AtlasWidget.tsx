@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { usePathname } from "next/navigation";
 
 import AtlasAvatar from "./AtlasAvatar";
 import AtlasChat from "./AtlasChat";
@@ -9,7 +10,15 @@ import useAtlas from "./hooks/useAtlas";
 
 export default function AtlasWidget() {
 
+  const pathname = usePathname();
   const atlas = useAtlas();
+
+  if (
+    pathname?.startsWith("/dashboard") ||
+    pathname?.startsWith("/login")
+  ) {
+    return null;
+  }
 
 
   return (

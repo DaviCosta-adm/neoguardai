@@ -4,15 +4,16 @@ import AtlasWidget from "./components/atlas/AtlasWidget";
 
 export const metadata: Metadata = {
 
-  title: "NeoGuardAI | Inteligência Artificial para Ambientes Seguros",
+  title: "NeoGuardAI | Prevenção de Evasão Escolar com IA",
 
   description:
-    "NeoGuardAI utiliza inteligência artificial, análise preditiva e o Atlas para transformar ambientes escolares em espaços mais seguros e inteligentes.",
+    "NeoGuardAI utiliza inteligência artificial, análise preditiva e o Atlas para identificar estudantes em risco e ajudar escolas a prevenir a evasão escolar.",
 
 
   keywords: [
     "Inteligência Artificial",
-    "Segurança Escolar",
+    "Evasão Escolar",
+    "Prevenção de Evasão",
     "Machine Learning",
     "NeoGuardAI",
     "Atlas AI",
@@ -27,10 +28,10 @@ export const metadata: Metadata = {
   openGraph: {
 
     title:
-      "NeoGuardAI | Inteligência Artificial para Ambientes Seguros",
+      "NeoGuardAI | Prevenção de Evasão Escolar com IA",
 
     description:
-      "Uma nova geração de segurança utilizando inteligência artificial.",
+      "Identifique alunos em risco de evasão com antecedência e aja antes do abandono escolar.",
 
     type:
       "website",
