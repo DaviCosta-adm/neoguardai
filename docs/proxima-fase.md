@@ -10,7 +10,10 @@ Base do SaaS na seguinte ordem:
 6. Persistência real em PostgreSQL ✅
 7. Relatórios ✅
 8. Módulo de especialistas ✅
-9. IA avançada / modelo preditivo ← próximo
+9. IA avançada / modelo preditivo v2 ✅
+
+Próximos refinamentos possíveis: PDF nativo, convites de usuários, treino
+supervisionado do modelo com histórico longitudinal.
 
 ## Banco de dados
 

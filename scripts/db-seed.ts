@@ -1,6 +1,6 @@
 import { hashSync } from "bcryptjs";
 import { Pool } from "pg";
-import { calcularRisco } from "../app/lib/risk/score";
+import { calcularRiscoPreditivo } from "../app/lib/risk/predictive";
 import {
   alertasSeed,
   buildAlunosSeed,
@@ -101,9 +101,9 @@ async function main() {
       );
     }
 
-    // Recalcula risco no seed para manter consistência com a regra atual
+    // Recalcula risco no seed com o modelo preditivo v2
     const alunos = buildAlunosSeed().map((aluno) => {
-      const risco = calcularRisco(aluno);
+      const risco = calcularRiscoPreditivo(aluno);
       return {
         ...aluno,
         riscoPercentual: risco.percentual,
