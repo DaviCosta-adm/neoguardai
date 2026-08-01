@@ -109,7 +109,6 @@ export function getResumoDashboard(auth: AuthContext): DashboardResumo {
     (alerta) => alerta.ativo && ids.has(alerta.alunoId)
   );
 
-  const total = alunos.length || 1;
   const frequenciaMedia =
     alunos.reduce((acc, aluno) => acc + aluno.frequencia, 0) /
     (alunos.length || 1);
