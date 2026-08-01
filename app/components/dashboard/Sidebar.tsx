@@ -10,6 +10,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   Settings,
+  Stethoscope,
   Users,
 } from "lucide-react";
 import type { UserRole } from "@/app/lib/types";
@@ -23,6 +24,11 @@ const allLinks = [
     label: "Intervenções",
     icon: ClipboardList,
   },
+  {
+    href: "/dashboard/especialistas",
+    label: "Especialistas",
+    icon: Stethoscope,
+  },
   { href: "/dashboard/relatorios", label: "Relatórios", icon: FileBarChart },
   { href: "/dashboard/atlas", label: "Atlas", icon: Bot },
   { href: "/dashboard/configuracoes", label: "Configurações", icon: Settings },
@@ -31,9 +37,12 @@ const allLinks = [
 function linksForRole(role: UserRole) {
   if (role === "especialista") {
     return allLinks.filter((link) =>
-      ["/dashboard", "/dashboard/alunos", "/dashboard/intervencoes"].includes(
-        link.href
-      )
+      [
+        "/dashboard",
+        "/dashboard/alunos",
+        "/dashboard/intervencoes",
+        "/dashboard/especialistas",
+      ].includes(link.href)
     );
   }
 

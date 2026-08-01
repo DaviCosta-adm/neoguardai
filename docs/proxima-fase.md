@@ -9,8 +9,8 @@ Base do SaaS na seguinte ordem:
 5. Autenticação + multi-tenant ✅
 6. Persistência real em PostgreSQL ✅
 7. Relatórios ✅
-8. Módulo de especialistas ← próximo
-9. IA avançada / modelo preditivo
+8. Módulo de especialistas ✅
+9. IA avançada / modelo preditivo ← próximo
 
 ## Banco de dados
 

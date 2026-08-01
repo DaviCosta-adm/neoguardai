@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import EncaminharForm from "@/app/components/dashboard/EncaminharForm";
 import Header from "@/app/components/dashboard/Header";
 import IntervencaoForm from "@/app/components/dashboard/IntervencaoForm";
 import RiskBadge from "@/app/components/dashboard/RiskBadge";
 import { requireAuth } from "@/app/lib/auth/dal";
+import { listarEspecialistasDaInstituicao } from "@/app/lib/data/especialistas";
 import {
   rotuloIntervencao,
   rotuloStatusAcompanhamento,
@@ -29,6 +31,13 @@ export default async function AlunoPage({
   const alertas = await getAlertasDoAluno(auth, aluno.id);
   const intervencoes = await getIntervencoesDoAluno(auth, aluno.id);
   const timeline = await getTimelineDoAluno(auth, aluno.id);
+  const especialistas = await listarEspecialistasDaInstituicao(
+    aluno.instituicaoId
+  );
+  const podeEncaminhar =
+    auth.user.role === "coordenacao" ||
+    auth.user.role === "admin_instituicao" ||
+    auth.user.role === "admin_neoguard";
 
   return (
     <>
@@ -160,6 +169,15 @@ export default async function AlunoPage({
             <IntervencaoForm alunoId={aluno.id} />
           </Panel>
         </section>
+
+        {podeEncaminhar ? (
+          <Panel title="Encaminhar para especialista">
+            <EncaminharForm
+              alunoId={aluno.id}
+              especialistas={especialistas}
+            />
+          </Panel>
+        ) : null}
 
         <Panel title="Linha do tempo do caso">
           <div className="space-y-3">

@@ -69,6 +69,8 @@ async function main() {
   try {
     await client.query("BEGIN");
 
+    await client.query("DELETE FROM devolutivas");
+    await client.query("DELETE FROM encaminhamentos");
     await client.query("DELETE FROM timeline_events");
     await client.query("DELETE FROM intervencoes");
     await client.query("DELETE FROM alertas");
@@ -195,6 +197,22 @@ async function main() {
         ]
       );
     }
+
+    await client.query(
+      `INSERT INTO encaminhamentos
+        (id, aluno_id, instituicao_id, especialista_id, criado_por, motivo, status, criado_em, atualizado_em)
+       VALUES
+        ('enc-001','alu-005','inst-001','user-002','user-001','Baixa participação e risco alto persistente.','em_atendimento','2026-07-28T14:00:00.000Z','2026-07-29T10:00:00.000Z'),
+        ('enc-103','alu-103','inst-002',NULL,'user-004','Caso crítico com múltiplos indicadores negativos.','aberto','2026-07-31T16:00:00.000Z','2026-07-31T16:00:00.000Z')`
+    );
+
+    await client.query(
+      `INSERT INTO devolutivas
+        (id, encaminhamento_id, autor_id, tipo, conteudo, criado_em)
+       VALUES
+        ('dev-001','enc-001','user-002','atendimento','Primeiro atendimento realizado com escuta ativa e plano semanal.','2026-07-29T10:00:00.000Z'),
+        ('dev-002','enc-001','user-002','recomendacao','Manter contato semanal com a família e revisar frequência em 7 dias.','2026-07-29T10:10:00.000Z')`
+    );
 
     await client.query("COMMIT");
     console.log("seed ok");
