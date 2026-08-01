@@ -8,8 +8,9 @@ import {
   LayoutDashboard,
   Users,
 } from "lucide-react";
+import type { UserRole } from "@/app/lib/types";
 
-const links = [
+const allLinks = [
   { href: "/dashboard", label: "Início", icon: LayoutDashboard },
   { href: "/dashboard/alunos", label: "Alunos", icon: Users },
   { href: "/dashboard/alertas", label: "Alertas", icon: AlertTriangle },
@@ -20,12 +21,18 @@ const links = [
   },
 ];
 
-export default function MobileNav() {
+export default function MobileNav({ role }: { role: UserRole }) {
   const pathname = usePathname();
+  const links =
+    role === "especialista"
+      ? allLinks.filter((link) => link.href !== "/dashboard/alertas")
+      : allLinks;
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[#070b1a]/95 px-2 py-2 backdrop-blur-xl md:hidden">
-      <div className="grid grid-cols-4 gap-1">
+      <div
+        className={`grid gap-1 ${links.length === 3 ? "grid-cols-3" : "grid-cols-4"}`}
+      >
         {links.map(({ href, label, icon: Icon }) => {
           const active =
             href === "/dashboard"

@@ -1,10 +1,11 @@
 import Link from "next/link";
 import Header from "@/app/components/dashboard/Header";
+import { requireAuth } from "@/app/lib/auth/dal";
+import { rotuloIntervencao } from "@/app/lib/data/labels";
 import {
   getAlunoById,
-  intervencoesMock,
-  rotuloIntervencao,
-} from "@/app/lib/data/mock";
+  getIntervencoes,
+} from "@/app/lib/data/repository";
 
 const statusStyle = {
   pendente: "text-amber-300 bg-amber-400/10 border-amber-400/20",
@@ -12,21 +13,20 @@ const statusStyle = {
   concluida: "text-emerald-300 bg-emerald-400/10 border-emerald-400/20",
 } as const;
 
-export default function IntervencoesPage() {
-  const itens = [...intervencoesMock].sort(
-    (a, b) => +new Date(b.realizadoEm) - +new Date(a.realizadoEm)
-  );
+export default async function IntervencoesPage() {
+  const auth = await requireAuth();
+  const itens = getIntervencoes(auth);
 
   return (
     <>
       <Header
         title="Intervenções"
-        subtitle="Ações realizadas, pendentes e agendadas pela coordenação."
+        subtitle="Ações realizadas, pendentes e agendadas pela equipe."
       />
 
       <div className="space-y-4 px-6 py-6">
         {itens.map((item) => {
-          const aluno = getAlunoById(item.alunoId);
+          const aluno = getAlunoById(auth, item.alunoId);
 
           return (
             <div
@@ -67,6 +67,11 @@ export default function IntervencoesPage() {
             </div>
           );
         })}
+        {itens.length === 0 ? (
+          <p className="text-sm text-gray-500">
+            Nenhuma intervenção no escopo deste perfil.
+          </p>
+        ) : null}
       </div>
     </>
   );
