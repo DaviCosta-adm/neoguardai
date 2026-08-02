@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   AlertTriangle,
+  Building2,
   ClipboardList,
   LayoutDashboard,
   Stethoscope,
@@ -11,7 +12,7 @@ import {
 } from "lucide-react";
 import type { UserRole } from "@/app/lib/types";
 
-const allLinks = [
+const schoolLinks = [
   { href: "/dashboard", label: "Início", icon: LayoutDashboard },
   { href: "/dashboard/alunos", label: "Alunos", icon: Users },
   { href: "/dashboard/alertas", label: "Alertas", icon: AlertTriangle },
@@ -27,18 +28,30 @@ const allLinks = [
   },
 ];
 
+const platformLinks = [
+  { href: "/dashboard", label: "Início", icon: LayoutDashboard },
+  {
+    href: "/dashboard/instituicoes",
+    label: "Escolas",
+    icon: Building2,
+  },
+  { href: "/dashboard/usuarios", label: "Usuários", icon: Users },
+];
+
 export default function MobileNav({ role }: { role: UserRole }) {
   const pathname = usePathname();
   const links =
-    role === "especialista"
-      ? allLinks.filter((link) =>
-          [
-            "/dashboard",
-            "/dashboard/alunos",
-            "/dashboard/especialistas",
-          ].includes(link.href)
-        )
-      : allLinks.filter((link) => link.href !== "/dashboard/especialistas");
+    role === "admin_neoguard"
+      ? platformLinks
+      : role === "especialista"
+        ? schoolLinks.filter((link) =>
+            [
+              "/dashboard",
+              "/dashboard/alunos",
+              "/dashboard/especialistas",
+            ].includes(link.href)
+          )
+        : schoolLinks.filter((link) => link.href !== "/dashboard/especialistas");
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[#070b1a]/95 px-2 py-2 backdrop-blur-xl md:hidden">

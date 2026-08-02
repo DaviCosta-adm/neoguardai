@@ -110,6 +110,27 @@ export interface DashboardResumo {
   intervencoesPendentes: number;
 }
 
+export interface InstituicaoResumo extends Instituicao {
+  totalEstudantes: number;
+  casosImediatos: number;
+  riscoCritico: number;
+  riscoAlto: number;
+  alertasAtivos: number;
+  usuarios: number;
+  frequenciaMedia: number;
+}
+
+export interface PlataformaResumo {
+  totalInstituicoes: number;
+  totalUsuarios: number;
+  totalEstudantes: number;
+  casosImediatos: number;
+  alertasAtivos: number;
+  intervencoesPendentes: number;
+  frequenciaMedia: number;
+  instituicoes: InstituicaoResumo[];
+}
+
 export type StatusEncaminhamento = "aberto" | "em_atendimento" | "concluido";
 
 export type TipoDevolutiva =

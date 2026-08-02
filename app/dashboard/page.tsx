@@ -6,10 +6,12 @@ import {
   Users,
 } from "lucide-react";
 import Header from "@/app/components/dashboard/Header";
+import PlatformAdminHome from "@/app/components/dashboard/PlatformAdminHome";
 import RiskBadge from "@/app/components/dashboard/RiskBadge";
 import StatCard from "@/app/components/dashboard/StatCard";
 import { requireAuth } from "@/app/lib/auth/dal";
 import { rotuloStatusAcompanhamento } from "@/app/lib/data/labels";
+import { getResumoPlataforma } from "@/app/lib/data/plataforma";
 import {
   getAlertasAtivos,
   getResumoDashboard,
@@ -19,6 +21,12 @@ import { rotuloRisco } from "@/app/lib/risk/score";
 
 export default async function DashboardPage() {
   const auth = await requireAuth();
+
+  if (auth.user.role === "admin_neoguard") {
+    const resumo = await getResumoPlataforma();
+    return <PlatformAdminHome resumo={resumo} />;
+  }
+
   const resumo = await getResumoDashboard(auth);
   const alunos = await listarAlunosPorPrioridade(auth);
   const prioritarios = alunos.slice(0, 5);
