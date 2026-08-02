@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 
 const contasDemo = [
+  "suporte@neoguard.ai — Admin NeoGuardAI (plataforma)",
   "ana@horizonte.edu.br — Coordenação (Horizonte)",
   "carlos@horizonte.edu.br — Especialista (Horizonte)",
   "maria@aurora.edu.br — Coordenação (Aurora)",
