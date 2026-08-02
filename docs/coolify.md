@@ -2,14 +2,28 @@
 
 O NeoGuardAI **precisa** de PostgreSQL. Sem `DATABASE_URL`, o login e o dashboard falham.
 
+## Instância atual (RC Soluções)
+
+| Campo | Valor |
+| --- | --- |
+| App | `neoguardai` |
+| UUID | `b114n2paozyfbfjc7en35pgv` |
+| URL | https://neoguardai.rcsolucoes.app.br |
+| Repo | `DaviCosta-adm/neoguardai` |
+| Branch no Coolify | `main` |
+| Build pack atual | **Nixpacks** → mudar para **Docker Compose** |
+| Postgres no projeto | **nenhum** |
+
+> O MCP `coolify-rc` é **somente leitura**. Alterar build pack, envs e redeploy exige o painel Coolify (ou token com escrita).
+
 ## Checklist rápido (acesso bem-sucedido)
 
-1. Branch/deploy: use `main` **depois** do merge do Compose + auth via API (ou a branch com `docker-compose.yml`).
-2. Tipo de recurso no Coolify: **Docker Compose** (não “Nixpacks/Node” sozinho).
-3. Compose file: `docker-compose.yml`.
-4. Envs abaixo preenchidas → Deploy → aguarde health verde.
-5. Abra `/api/health` → deve retornar `{"ok":true,"database":"up"}`.
-6. Abra `/login` → `ana@horizonte.edu.br` / `demo123`.
+1. Código com Compose já está em `main` (PR #4).
+2. No Coolify → app `neoguardai` → Build Pack: **Docker Compose**.
+3. Compose file: `docker-compose.yaml`.
+4. Envs abaixo → **Deploy**.
+5. https://neoguardai.rcsolucoes.app.br/api/health → `{"ok":true,"database":"up"}`.
+6. `/login` → `ana@horizonte.edu.br` / `demo123`.
 
 ## Opção A — Docker Compose do repositório (recomendada)
 
