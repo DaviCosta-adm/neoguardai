@@ -7,7 +7,7 @@ import {
   getInstituicaoById,
   toPublicUser,
 } from "@/app/lib/auth/users";
-import { getSession } from "@/app/lib/auth/session";
+import { deleteSession, getSession } from "@/app/lib/auth/session";
 import type { Instituicao, Usuario } from "@/app/lib/types";
 
 export type AuthContext = {
@@ -30,21 +30,29 @@ export const getAuthContext = cache(async (): Promise<AuthContext | null> => {
   const session = await verifySession();
   if (!session) return null;
 
-  const dbUser = await findUserById(session.userId);
-  if (!dbUser) return null;
+  try {
+    const dbUser = await findUserById(session.userId);
+    if (!dbUser) {
+      await deleteSession();
+      return null;
+    }
 
-  const instituicao =
-    (await getInstituicaoById(dbUser.instituicaoId)) ??
-    ({
-      id: dbUser.instituicaoId,
-      nome: "NeoGuardAI",
-    } satisfies Instituicao);
+    const instituicao =
+      (await getInstituicaoById(dbUser.instituicaoId)) ??
+      ({
+        id: dbUser.instituicaoId,
+        nome: "NeoGuardAI",
+      } satisfies Instituicao);
 
-  return {
-    user: toPublicUser(dbUser),
-    instituicao,
-    session,
-  };
+    return {
+      user: toPublicUser(dbUser),
+      instituicao,
+      session,
+    };
+  } catch (error) {
+    console.error("Erro ao carregar sessão:", error);
+    return null;
+  }
 });
 
 export async function requireAuth(): Promise<AuthContext> {
