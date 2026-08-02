@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "coolify-rc": {
+      "url": "https://coolify.rcsolucoes.app.br/mcp",
+      "headers": {
+        "Authorization": "Bearer ${env:COOLIFY_RC_TOKEN}"
+      }
+    }
+  }
+}
