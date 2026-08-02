@@ -1,5 +1,5 @@
 import { Bell, Search } from "lucide-react";
-import { logout } from "@/app/actions/auth";
+import LogoutButton from "@/app/components/dashboard/LogoutButton";
 import { requireAuth } from "@/app/lib/auth/dal";
 import { rotuloRole } from "@/app/lib/data/labels";
 
@@ -44,14 +44,7 @@ export default async function Header({
             <p className="text-xs text-gray-500">{rotuloRole[auth.user.role]}</p>
           </div>
 
-          <form action={logout}>
-            <button
-              type="submit"
-              className="rounded-xl border border-white/10 px-3 py-2 text-sm text-gray-300 transition hover:border-rose-400/30 hover:text-rose-300"
-            >
-              Sair
-            </button>
-          </form>
+          <LogoutButton />
         </div>
       </div>
     </header>

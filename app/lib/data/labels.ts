@@ -1,4 +1,10 @@
-import type { Aluno, Intervencao, UserRole } from "@/app/lib/types";
+import type {
+  Aluno,
+  Intervencao,
+  StatusEncaminhamento,
+  TipoDevolutiva,
+  UserRole,
+} from "@/app/lib/types";
 
 export const rotuloIntervencao: Record<Intervencao["tipo"], string> = {
   conversa_aluno: "Conversa com o aluno",
@@ -33,4 +39,18 @@ export const prioridadeRisco: Record<Aluno["riscoNivel"], number> = {
   alto: 1,
   medio: 2,
   baixo: 3,
+};
+
+export const rotuloStatusEncaminhamento: Record<StatusEncaminhamento, string> =
+  {
+    aberto: "Aberto",
+    em_atendimento: "Em atendimento",
+    concluido: "Concluído",
+  };
+
+export const rotuloTipoDevolutiva: Record<TipoDevolutiva, string> = {
+  atendimento: "Atendimento",
+  observacao: "Observação",
+  devolutiva: "Devolutiva",
+  recomendacao: "Recomendação",
 };

@@ -1,18 +1,30 @@
 import Header from "@/app/components/dashboard/Header";
+import AtlasConsole from "@/app/components/dashboard/AtlasConsole";
+import { requireAuth } from "@/app/lib/auth/dal";
+import { listarAlunosPorPrioridade } from "@/app/lib/data/repository";
+import { resumoPreditivoAluno } from "@/app/lib/risk/predictive";
 
-export default function AtlasDashboardPage() {
+export default async function AtlasDashboardPage() {
+  const auth = await requireAuth();
+  const alunos = await listarAlunosPorPrioridade(auth);
+  const preditivos = Object.fromEntries(
+    alunos.map((aluno) => [aluno.id, resumoPreditivoAluno(aluno)])
+  );
+
   return (
     <>
       <Header
         title="Atlas"
-        subtitle="Assistente interno para explicar riscos e sugerir ações."
+        subtitle="Assistente contextual com modelo preditivo v2 e fallback local."
       />
       <div className="px-6 py-6">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-sm leading-6 text-gray-300">
-          O Atlas já está disponível no widget flutuante. Nesta página,
-          futuramente ele poderá resumir casos, explicar alertas e ajudar a
-          montar planos de ação com contexto do aluno selecionado.
-        </div>
+        {alunos.length > 0 ? (
+          <AtlasConsole alunos={alunos} preditivos={preditivos} />
+        ) : (
+          <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-8 text-sm text-gray-400">
+            Nenhum caso disponível para análise neste perfil.
+          </div>
+        )}
       </div>
     </>
   );

@@ -109,3 +109,41 @@ export interface DashboardResumo {
   frequenciaMedia: number;
   intervencoesPendentes: number;
 }
+
+export type StatusEncaminhamento = "aberto" | "em_atendimento" | "concluido";
+
+export type TipoDevolutiva =
+  | "atendimento"
+  | "observacao"
+  | "devolutiva"
+  | "recomendacao";
+
+export interface Encaminhamento {
+  id: string;
+  alunoId: string;
+  instituicaoId: string;
+  especialistaId?: string;
+  criadoPor: string;
+  motivo: string;
+  status: StatusEncaminhamento;
+  criadoEm: string;
+  atualizadoEm: string;
+}
+
+export interface Devolutiva {
+  id: string;
+  encaminhamentoId: string;
+  autorId: string;
+  tipo: TipoDevolutiva;
+  conteudo: string;
+  criadoEm: string;
+}
+
+export type EncaminhamentoDetalhe = Encaminhamento & {
+  alunoNome: string;
+  alunoTurma: string;
+  riscoNivel: RiskLevel;
+  riscoPercentual: number;
+  especialistaNome?: string;
+  criadoPorNome: string;
+};
