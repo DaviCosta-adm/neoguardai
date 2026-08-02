@@ -1,12 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
-import {
-  encaminharAlunoAction,
-  type EspecialistaFormState,
-} from "@/app/actions/especialistas";
-
-const initialState: EspecialistaFormState = {};
+import { useState, useTransition } from "react";
 
 export default function EncaminharForm({
   alunoId,
@@ -15,15 +9,39 @@ export default function EncaminharForm({
   alunoId: string;
   especialistas: Array<{ id: string; nome: string }>;
 }) {
-  const [state, action, pending] = useActionState(
-    encaminharAlunoAction,
-    initialState
-  );
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const motivo = String(formData.get("motivo") ?? "");
+    const especialistaId = String(formData.get("especialistaId") ?? "");
+
+    setError(null);
+    setSuccess(null);
+
+    startTransition(async () => {
+      const response = await fetch("/api/especialistas/encaminhar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ alunoId, motivo, especialistaId }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error ?? "Erro ao encaminhar.");
+        return;
+      }
+
+      setSuccess("Caso encaminhado ao especialista.");
+      window.location.href = "/dashboard/especialistas";
+    });
+  }
 
   return (
-    <form action={action} className="space-y-3">
-      <input type="hidden" name="alunoId" value={alunoId} />
-
+    <form onSubmit={handleSubmit} className="space-y-3">
       <div>
         <label htmlFor="especialistaId" className="text-xs text-gray-500">
           Especialista (opcional)
@@ -57,12 +75,8 @@ export default function EncaminharForm({
         />
       </div>
 
-      {state?.error ? (
-        <p className="text-sm text-rose-300">{state.error}</p>
-      ) : null}
-      {state?.success ? (
-        <p className="text-sm text-emerald-300">{state.success}</p>
-      ) : null}
+      {error ? <p className="text-sm text-rose-300">{error}</p> : null}
+      {success ? <p className="text-sm text-emerald-300">{success}</p> : null}
 
       <button
         type="submit"

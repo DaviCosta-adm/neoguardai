@@ -1,14 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
-import {
-  registrarDevolutivaAction,
-  type EspecialistaFormState,
-} from "@/app/actions/especialistas";
+import { useState, useTransition } from "react";
 import { rotuloTipoDevolutiva } from "@/app/lib/data/labels";
 import type { TipoDevolutiva } from "@/app/lib/types";
 
-const initialState: EspecialistaFormState = {};
 const tipos = Object.keys(rotuloTipoDevolutiva) as TipoDevolutiva[];
 
 export default function DevolutivaForm({
@@ -16,15 +11,45 @@ export default function DevolutivaForm({
 }: {
   encaminhamentoId: string;
 }) {
-  const [state, action, pending] = useActionState(
-    registrarDevolutivaAction,
-    initialState
-  );
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const tipo = String(formData.get("tipo") ?? "");
+    const conteudo = String(formData.get("conteudo") ?? "");
+    const concluir = formData.get("concluir") === "on";
+
+    setError(null);
+    setSuccess(null);
+
+    startTransition(async () => {
+      const response = await fetch("/api/especialistas/devolutiva", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          encaminhamentoId,
+          tipo,
+          conteudo,
+          concluir,
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error ?? "Erro ao salvar.");
+        return;
+      }
+
+      setSuccess("Registro salvo com sucesso.");
+      window.location.reload();
+    });
+  }
 
   return (
-    <form action={action} className="space-y-3">
-      <input type="hidden" name="encaminhamentoId" value={encaminhamentoId} />
-
+    <form onSubmit={handleSubmit} className="space-y-3">
       <div>
         <label htmlFor="tipo" className="text-xs text-gray-500">
           Tipo de registro
@@ -58,16 +83,16 @@ export default function DevolutivaForm({
       </div>
 
       <label className="flex items-center gap-2 text-sm text-gray-400">
-        <input type="checkbox" name="concluir" className="rounded border-white/20" />
+        <input
+          type="checkbox"
+          name="concluir"
+          className="rounded border-white/20"
+        />
         Concluir encaminhamento
       </label>
 
-      {state?.error ? (
-        <p className="text-sm text-rose-300">{state.error}</p>
-      ) : null}
-      {state?.success ? (
-        <p className="text-sm text-emerald-300">{state.success}</p>
-      ) : null}
+      {error ? <p className="text-sm text-rose-300">{error}</p> : null}
+      {success ? <p className="text-sm text-emerald-300">{success}</p> : null}
 
       <button
         type="submit"

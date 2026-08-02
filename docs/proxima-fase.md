@@ -11,9 +11,12 @@ Base do SaaS na seguinte ordem:
 7. Relatórios ✅
 8. Módulo de especialistas ✅
 9. IA avançada / modelo preditivo v2 ✅
+10. Deploy Coolify com Postgres (Docker Compose) ✅
 
 Próximos refinamentos possíveis: PDF nativo, convites de usuários, treino
 supervisionado do modelo com histórico longitudinal.
+
+Deploy: veja `docs/coolify.md`.
 
 ## Banco de dados
 

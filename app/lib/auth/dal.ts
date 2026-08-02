@@ -64,3 +64,8 @@ export async function requireAuth(): Promise<AuthContext> {
 
   return auth;
 }
+
+/** Para Route Handlers — não usa redirect. */
+export async function requireAuthApi(): Promise<AuthContext | null> {
+  return getAuthContext();
+}

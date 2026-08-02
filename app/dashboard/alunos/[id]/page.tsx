@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import EncaminharForm from "@/app/components/dashboard/EncaminharForm";
 import Header from "@/app/components/dashboard/Header";
 import IntervencaoForm from "@/app/components/dashboard/IntervencaoForm";
+import RecalcularRiscoButton from "@/app/components/dashboard/RecalcularRiscoButton";
 import RiskBadge from "@/app/components/dashboard/RiskBadge";
-import { recalcularRiscoAlunoAction } from "@/app/actions/risco";
 import { requireAuth } from "@/app/lib/auth/dal";
 import { listarEspecialistasDaInstituicao } from "@/app/lib/data/especialistas";
 import {
@@ -105,15 +105,9 @@ export default async function AlunoPage({
               <p>{textoTendencia(preditivo.tendencia)}</p>
               <p>Probabilidade estimada de evasão: {preditivo.probabilidadeEvasao}%</p>
             </div>
-            <form action={recalcularRiscoAlunoAction} className="mt-4">
-              <input type="hidden" name="alunoId" value={aluno.id} />
-              <button
-                type="submit"
-                className="rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-3 py-2 text-xs text-cyan-200"
-              >
-                Recalcular risco preditivo
-              </button>
-            </form>
+            <div className="mt-4">
+              <RecalcularRiscoButton alunoId={aluno.id} />
+            </div>
           </div>
         </section>
 

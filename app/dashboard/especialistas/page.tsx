@@ -1,7 +1,7 @@
 import Link from "next/link";
+import AssumirCasoButton from "@/app/components/dashboard/AssumirCasoButton";
 import Header from "@/app/components/dashboard/Header";
 import RiskBadge from "@/app/components/dashboard/RiskBadge";
-import { assumirCasoAction } from "@/app/actions/especialistas";
 import { requireAuth } from "@/app/lib/auth/dal";
 import { listarEncaminhamentos } from "@/app/lib/data/especialistas";
 import { rotuloStatusEncaminhamento } from "@/app/lib/data/labels";
@@ -53,19 +53,7 @@ export default async function EspecialistasPage() {
                 (!caso.especialistaId ||
                   caso.especialistaId === auth.user.id) &&
                 caso.status !== "concluido" ? (
-                  <form action={assumirCasoAction}>
-                    <input
-                      type="hidden"
-                      name="encaminhamentoId"
-                      value={caso.id}
-                    />
-                    <button
-                      type="submit"
-                      className="rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-3 py-2 text-sm text-cyan-200"
-                    >
-                      Assumir caso
-                    </button>
-                  </form>
+                  <AssumirCasoButton encaminhamentoId={caso.id} />
                 ) : null}
                 <Link
                   href={`/dashboard/especialistas/${caso.id}`}
