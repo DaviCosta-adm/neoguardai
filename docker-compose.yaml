@@ -28,8 +28,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - "${APP_PORT:-3000}:3000"
+    # Coolify/Traefik roteia pela rede Docker; evite publicar a porta no host.
+    expose:
+      - "3000"
     environment:
       NODE_ENV: production
       AUTH_SECRET: ${AUTH_SECRET:-change-me-in-production}
