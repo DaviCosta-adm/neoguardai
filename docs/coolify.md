@@ -2,6 +2,15 @@
 
 O NeoGuardAI **precisa** de PostgreSQL. Sem `DATABASE_URL`, o login e o dashboard falham.
 
+## Checklist rápido (acesso bem-sucedido)
+
+1. Branch/deploy: use `main` **depois** do merge do Compose + auth via API (ou a branch com `docker-compose.yml`).
+2. Tipo de recurso no Coolify: **Docker Compose** (não “Nixpacks/Node” sozinho).
+3. Compose file: `docker-compose.yml`.
+4. Envs abaixo preenchidas → Deploy → aguarde health verde.
+5. Abra `/api/health` → deve retornar `{"ok":true,"database":"up"}`.
+6. Abra `/login` → `ana@horizonte.edu.br` / `demo123`.
+
 ## Opção A — Docker Compose do repositório (recomendada)
 
 1. No Coolify, crie um recurso **Docker Compose**.
@@ -18,6 +27,13 @@ O NeoGuardAI **precisa** de PostgreSQL. Sem `DATABASE_URL`, o login e o dashboar
 O Compose sobe:
 - `db` → PostgreSQL 16
 - `app` → Next.js (roda migrate/seed no boot e depois `next start`)
+
+### Redeploy automático via GitHub Actions
+
+Há um workflow em `.github/workflows/coolify-deploy.yml`. No GitHub → Secrets → Actions:
+
+- `COOLIFY_WEBHOOK_URL` — URL do Deploy Webhook do recurso no Coolify
+- `COOLIFY_TOKEN` — opcional, se o webhook exigir Bearer token
 
 ## Opção B — App + Postgres separados no Coolify
 
