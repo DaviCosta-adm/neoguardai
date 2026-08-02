@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   Building2,
   ClipboardList,
+  CreditCard,
   LayoutDashboard,
   Stethoscope,
   Users,
@@ -34,6 +35,11 @@ const platformLinks = [
     href: "/dashboard/instituicoes",
     label: "Escolas",
     icon: Building2,
+  },
+  {
+    href: "/dashboard/assinaturas",
+    label: "Planos",
+    icon: CreditCard,
   },
   { href: "/dashboard/usuarios", label: "Usuários", icon: Users },
 ];

@@ -41,6 +41,7 @@ export async function PATCH(request: Request, { params }: Params) {
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/instituicoes");
     revalidatePath(`/dashboard/instituicoes/${id}`);
+    revalidatePath("/dashboard/assinaturas");
     revalidatePath("/dashboard/usuarios");
     revalidatePath("/dashboard/configuracoes");
 
@@ -65,6 +66,7 @@ export async function DELETE(_request: Request, { params }: Params) {
 
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/instituicoes");
+    revalidatePath("/dashboard/assinaturas");
     revalidatePath("/dashboard/usuarios");
     revalidatePath("/dashboard/configuracoes");
 

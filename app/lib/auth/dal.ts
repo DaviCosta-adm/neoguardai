@@ -8,6 +8,7 @@ import {
   toPublicUser,
 } from "@/app/lib/auth/users";
 import { deleteSession, getSession } from "@/app/lib/auth/session";
+import { getAssinaturaStatusByInstituicaoId } from "@/app/lib/data/assinaturas";
 import type { Instituicao, Usuario } from "@/app/lib/types";
 
 export type AuthContext = {
@@ -35,6 +36,19 @@ export const getAuthContext = cache(async (): Promise<AuthContext | null> => {
     if (!dbUser) {
       await deleteSession();
       return null;
+    }
+
+    if (dbUser.role !== "admin_neoguard") {
+      const assinaturaStatus = await getAssinaturaStatusByInstituicaoId(
+        dbUser.instituicaoId
+      );
+      if (
+        assinaturaStatus === "inativo" ||
+        assinaturaStatus === "bloqueado"
+      ) {
+        await deleteSession();
+        return null;
+      }
     }
 
     const instituicao =

@@ -2,6 +2,7 @@ import "server-only";
 
 import { hashSync } from "bcryptjs";
 import { query } from "@/app/lib/db/client";
+import { createAssinaturaForInstituicao } from "@/app/lib/data/assinaturas";
 import type { Instituicao, UserRole, Usuario } from "@/app/lib/types";
 import { toPublicUser, type DbUser } from "@/app/lib/auth/users";
 
@@ -58,6 +59,7 @@ export async function createInstituicao(nome: string): Promise<Instituicao> {
     id,
     clean,
   ]);
+  await createAssinaturaForInstituicao(id);
 
   return { id, nome: clean };
 }

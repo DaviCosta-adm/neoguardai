@@ -76,12 +76,23 @@ async function main() {
     await client.query("DELETE FROM alertas");
     await client.query("DELETE FROM alunos");
     await client.query("DELETE FROM usuarios");
+    await client.query("DELETE FROM assinaturas");
     await client.query("DELETE FROM instituicoes");
 
     for (const instituicao of instituicoes) {
       await client.query(
         "INSERT INTO instituicoes (id, nome) VALUES ($1, $2)",
         [instituicao.id, instituicao.nome]
+      );
+      await client.query(
+        `INSERT INTO assinaturas
+          (id, instituicao_id, status, plano, observacao)
+         VALUES ($1, $2, 'ativo', 'padrao', $3)`,
+        [
+          `ass-${instituicao.id}`,
+          instituicao.id,
+          "Assinatura demo ativa.",
+        ]
       );
     }
 

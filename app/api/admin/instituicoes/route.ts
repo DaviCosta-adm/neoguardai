@@ -41,6 +41,7 @@ export async function POST(request: Request) {
 
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/instituicoes");
+    revalidatePath("/dashboard/assinaturas");
     revalidatePath("/dashboard/usuarios");
     revalidatePath("/dashboard/configuracoes");
 

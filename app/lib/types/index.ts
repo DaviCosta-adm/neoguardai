@@ -38,6 +38,19 @@ export interface Instituicao {
   nome: string;
 }
 
+export type AssinaturaStatus = "ativo" | "inativo" | "bloqueado";
+
+export interface Assinatura {
+  id: string;
+  instituicaoId: string;
+  instituicaoNome: string;
+  status: AssinaturaStatus;
+  plano: string;
+  iniciadaEm: string;
+  atualizadaEm: string;
+  observacao: string;
+}
+
 export interface Usuario {
   id: string;
   nome: string;
