@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import Header from "@/app/components/dashboard/Header";
+import InstituicaoDetailActions from "@/app/components/dashboard/admin/InstituicaoDetailActions";
 import { requireAuth } from "@/app/lib/auth/dal";
 import { listUsuarios } from "@/app/lib/auth/users";
 import { rotuloRole } from "@/app/lib/data/labels";
@@ -61,6 +62,8 @@ export default async function InstituicaoDetalhePage({
             </p>
           </div>
         </section>
+
+        <InstituicaoDetailActions id={instituicao.id} nome={instituicao.nome} />
 
         <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
           <div className="mb-4 flex items-center justify-between">
