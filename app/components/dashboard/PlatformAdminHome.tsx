@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   Building2,
   ClipboardList,
+  CreditCard,
   Gauge,
   Shield,
   Users,
@@ -20,7 +21,7 @@ export default function PlatformAdminHome({
     <>
       <Header
         title="Painel administrativo"
-        subtitle="Visão da plataforma NeoGuardAI — instituições, usuários e risco agregado."
+        subtitle="Visão da plataforma NeoGuardAI — instituições, assinaturas, usuários e risco agregado."
         eyebrow="NeoGuardAI · Plataforma"
       />
 
@@ -74,6 +75,15 @@ export default function PlatformAdminHome({
                 className="rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-100 transition hover:bg-cyan-400/20"
               >
                 Gerenciar instituições
+              </Link>
+              <Link
+                href="/dashboard/assinaturas"
+                className="rounded-xl border border-white/10 px-4 py-2 text-sm text-gray-200 transition hover:border-cyan-400/30"
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <CreditCard size={14} />
+                  Assinaturas
+                </span>
               </Link>
               <Link
                 href="/dashboard/usuarios"

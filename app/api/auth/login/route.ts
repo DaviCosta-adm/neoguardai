@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSessionToken } from "@/app/lib/auth/session";
 import { findUserByEmail, verifyUserPassword } from "@/app/lib/auth/users";
+import { getAssinaturaStatusByInstituicaoId } from "@/app/lib/data/assinaturas";
 
 export async function POST(request: Request) {
   try {
@@ -39,6 +40,32 @@ export async function POST(request: Request) {
         { error: "Credenciais inválidas." },
         { status: 401 }
       );
+    }
+
+    if (user.role !== "admin_neoguard") {
+      const status = await getAssinaturaStatusByInstituicaoId(
+        user.instituicaoId
+      );
+
+      if (status === "inativo") {
+        return NextResponse.json(
+          {
+            error:
+              "Assinatura inativa. Entre em contato com o suporte NeoGuardAI.",
+          },
+          { status: 403 }
+        );
+      }
+
+      if (status === "bloqueado") {
+        return NextResponse.json(
+          {
+            error:
+              "Assinatura bloqueada. Entre em contato com o suporte NeoGuardAI.",
+          },
+          { status: 403 }
+        );
+      }
     }
 
     const cookie = await createSessionToken({

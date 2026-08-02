@@ -1,5 +1,6 @@
 import type {
   Aluno,
+  AssinaturaStatus,
   Intervencao,
   StatusEncaminhamento,
   TipoDevolutiva,
@@ -32,6 +33,12 @@ export const rotuloRole: Record<UserRole, string> = {
   especialista: "Especialista",
   admin_instituicao: "Admin da instituição",
   admin_neoguard: "Admin NeoGuardAI",
+};
+
+export const rotuloAssinaturaStatus: Record<AssinaturaStatus, string> = {
+  ativo: "Ativo",
+  inativo: "Inativo",
+  bloqueado: "Bloqueado",
 };
 
 export const prioridadeRisco: Record<Aluno["riscoNivel"], number> = {
