@@ -1,0 +1,52 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-neoguard}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-neoguard}
+      POSTGRES_DB: ${POSTGRES_DB:-neoguardai}
+    volumes:
+      - neoguard_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-neoguard} -d ${POSTGRES_DB:-neoguardai}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build:
+      context: .
+      args:
+        AUTH_SECRET: ${AUTH_SECRET:-change-me-in-production}
+        NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY:-}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      AUTH_SECRET: ${AUTH_SECRET:-change-me-in-production}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://neoguard:neoguard@db:5432/neoguardai}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      SEED_ON_START: ${SEED_ON_START:-true}
+      NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY:-}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1:3000/api/health | grep -q '\"ok\":true'",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+volumes:
+  neoguard_pg_data:
