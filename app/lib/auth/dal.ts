@@ -69,3 +69,12 @@ export async function requireAuth(): Promise<AuthContext> {
 export async function requireAuthApi(): Promise<AuthContext | null> {
   return getAuthContext();
 }
+
+/** Super admin da plataforma — para Route Handlers. */
+export async function requireAdminNeoGuardApi(): Promise<AuthContext | null> {
+  const auth = await getAuthContext();
+  if (!auth || auth.user.role !== "admin_neoguard") {
+    return null;
+  }
+  return auth;
+}
