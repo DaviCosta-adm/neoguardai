@@ -40,15 +40,35 @@ export interface Instituicao {
 
 export type AssinaturaStatus = "ativo" | "inativo" | "bloqueado";
 
+export interface Plano {
+  id: string;
+  nome: string;
+  descricao: string;
+  precoCentavos: number;
+  moeda: string;
+  intervalo: string;
+  maxAlunos: number;
+  maxUsuarios: number;
+  stripeProductId: string | null;
+  stripePriceId: string | null;
+  ativo: boolean;
+  ordem: number;
+}
+
 export interface Assinatura {
   id: string;
   instituicaoId: string;
   instituicaoNome: string;
   status: AssinaturaStatus;
   plano: string;
+  planoId: string;
+  planoNome: string;
   iniciadaEm: string;
   atualizadaEm: string;
   observacao: string;
+  stripeCustomerId: string | null;
+  stripeSubscriptionId: string | null;
+  stripePriceId: string | null;
 }
 
 export interface Usuario {

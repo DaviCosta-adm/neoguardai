@@ -56,6 +56,7 @@ export async function PATCH(request: Request, { params }: Params) {
 
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/assinaturas");
+    revalidatePath("/dashboard/planos");
     revalidatePath("/dashboard/instituicoes");
 
     return NextResponse.json({ ok: true, assinatura });

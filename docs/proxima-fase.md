@@ -16,6 +16,8 @@ Base do SaaS na seguinte ordem:
 Próximos refinamentos possíveis: PDF nativo, convites de usuários, treino
 supervisionado do modelo com histórico longitudinal.
 
+Stripe + planos: ✅ (Checkout, Portal, webhook e catálogo Essencial/Profissional/Rede).
+
 Deploy: veja `docs/coolify.md`.
 
 ## Banco de dados
