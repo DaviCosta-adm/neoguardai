@@ -3,6 +3,8 @@ import AssinaturaAdminPanel from "@/app/components/dashboard/admin/AssinaturaAdm
 import Header from "@/app/components/dashboard/Header";
 import { requireAuth } from "@/app/lib/auth/dal";
 import { listAssinaturas } from "@/app/lib/data/assinaturas";
+import { listPlanos } from "@/app/lib/data/planos";
+import { isStripeConfigured } from "@/app/lib/stripe/client";
 
 export default async function AssinaturasPage() {
   const auth = await requireAuth();
@@ -11,18 +13,25 @@ export default async function AssinaturasPage() {
     redirect("/dashboard");
   }
 
-  const assinaturas = await listAssinaturas();
+  const [assinaturas, planos] = await Promise.all([
+    listAssinaturas(),
+    listPlanos(true),
+  ]);
 
   return (
     <>
       <Header
         title="Assinaturas"
-        subtitle="Controle o status de cada instituição: ativo, inativo ou bloqueado."
+        subtitle="Status, planos e cobrança Stripe por instituição."
         eyebrow="NeoGuardAI · Plataforma"
       />
 
       <div className="px-6 py-6">
-        <AssinaturaAdminPanel assinaturas={assinaturas} />
+        <AssinaturaAdminPanel
+          assinaturas={assinaturas}
+          planos={planos}
+          stripeConfigured={isStripeConfigured()}
+        />
       </div>
     </>
   );

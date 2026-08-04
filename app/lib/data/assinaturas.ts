@@ -9,15 +9,22 @@ type AssinaturaRow = {
   instituicao_nome: string;
   status: AssinaturaStatus;
   plano: string;
+  plano_id: string | null;
+  plano_nome: string | null;
   iniciada_em: Date | string;
   atualizada_em: Date | string;
   observacao: string;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  stripe_price_id: string | null;
 };
 
 const STATUSES: AssinaturaStatus[] = ["ativo", "inativo", "bloqueado"];
 
 function toIso(value: Date | string) {
-  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
+  return value instanceof Date
+    ? value.toISOString()
+    : new Date(value).toISOString();
 }
 
 function mapAssinatura(row: AssinaturaRow): Assinatura {
@@ -26,12 +33,37 @@ function mapAssinatura(row: AssinaturaRow): Assinatura {
     instituicaoId: row.instituicao_id,
     instituicaoNome: row.instituicao_nome,
     status: row.status,
-    plano: row.plano,
+    plano: row.plano_id || row.plano,
+    planoId: row.plano_id || row.plano,
+    planoNome: row.plano_nome || row.plano,
     iniciadaEm: toIso(row.iniciada_em),
     atualizadaEm: toIso(row.atualizada_em),
     observacao: row.observacao,
+    stripeCustomerId: row.stripe_customer_id,
+    stripeSubscriptionId: row.stripe_subscription_id,
+    stripePriceId: row.stripe_price_id,
   };
 }
+
+const ASSINATURA_SELECT = `
+  SELECT
+    a.id,
+    a.instituicao_id,
+    i.nome AS instituicao_nome,
+    a.status,
+    a.plano,
+    a.plano_id,
+    p.nome AS plano_nome,
+    a.iniciada_em,
+    a.atualizada_em,
+    a.observacao,
+    a.stripe_customer_id,
+    a.stripe_subscription_id,
+    a.stripe_price_id
+  FROM assinaturas a
+  JOIN instituicoes i ON i.id = a.instituicao_id
+  LEFT JOIN planos p ON p.id = a.plano_id
+`;
 
 export function isValidAssinaturaStatus(
   status: string
@@ -41,20 +73,8 @@ export function isValidAssinaturaStatus(
 
 export async function listAssinaturas(): Promise<Assinatura[]> {
   const result = await query<AssinaturaRow>(
-    `SELECT
-       a.id,
-       a.instituicao_id,
-       i.nome AS instituicao_nome,
-       a.status,
-       a.plano,
-       a.iniciada_em,
-       a.atualizada_em,
-       a.observacao
-     FROM assinaturas a
-     JOIN instituicoes i ON i.id = a.instituicao_id
-     ORDER BY i.nome`
+    `${ASSINATURA_SELECT} ORDER BY i.nome`
   );
-
   return result.rows.map(mapAssinatura);
 }
 
@@ -62,21 +82,31 @@ export async function getAssinaturaById(
   id: string
 ): Promise<Assinatura | null> {
   const result = await query<AssinaturaRow>(
-    `SELECT
-       a.id,
-       a.instituicao_id,
-       i.nome AS instituicao_nome,
-       a.status,
-       a.plano,
-       a.iniciada_em,
-       a.atualizada_em,
-       a.observacao
-     FROM assinaturas a
-     JOIN instituicoes i ON i.id = a.instituicao_id
-     WHERE a.id = $1`,
+    `${ASSINATURA_SELECT} WHERE a.id = $1`,
     [id]
   );
+  const row = result.rows[0];
+  return row ? mapAssinatura(row) : null;
+}
 
+export async function getAssinaturaByStripeCustomerId(
+  customerId: string
+): Promise<Assinatura | null> {
+  const result = await query<AssinaturaRow>(
+    `${ASSINATURA_SELECT} WHERE a.stripe_customer_id = $1`,
+    [customerId]
+  );
+  const row = result.rows[0];
+  return row ? mapAssinatura(row) : null;
+}
+
+export async function getAssinaturaByStripeSubscriptionId(
+  subscriptionId: string
+): Promise<Assinatura | null> {
+  const result = await query<AssinaturaRow>(
+    `${ASSINATURA_SELECT} WHERE a.stripe_subscription_id = $1`,
+    [subscriptionId]
+  );
   const row = result.rows[0];
   return row ? mapAssinatura(row) : null;
 }
@@ -97,15 +127,16 @@ export async function createAssinaturaForInstituicao(
   options?: { plano?: string; observacao?: string }
 ): Promise<void> {
   const id = `ass-${instituicaoId}`;
+  const planoId = options?.plano?.trim() || "essencial";
   await query(
     `INSERT INTO assinaturas
-       (id, instituicao_id, status, plano, observacao)
-     VALUES ($1, $2, 'ativo', $3, $4)
+       (id, instituicao_id, status, plano, plano_id, observacao)
+     VALUES ($1, $2, 'ativo', $3, $3, $4)
      ON CONFLICT (instituicao_id) DO NOTHING`,
     [
       id,
       instituicaoId,
-      options?.plano?.trim() || "padrao",
+      planoId,
       options?.observacao?.trim() ||
         "Assinatura inicial criada automaticamente.",
     ]
@@ -121,32 +152,21 @@ export async function updateAssinaturaStatus(
     throw new Error("Status de assinatura inválido.");
   }
 
-  const result = await query<AssinaturaRow>(
-    `UPDATE assinaturas a
+  await query(
+    `UPDATE assinaturas
      SET
        status = $2,
-       observacao = COALESCE($3, a.observacao),
+       observacao = COALESCE($3, observacao),
        atualizada_em = NOW()
-     FROM instituicoes i
-     WHERE a.id = $1 AND i.id = a.instituicao_id
-     RETURNING
-       a.id,
-       a.instituicao_id,
-       i.nome AS instituicao_nome,
-       a.status,
-       a.plano,
-       a.iniciada_em,
-       a.atualizada_em,
-       a.observacao`,
+     WHERE id = $1`,
     [id, status, observacao?.trim() ?? null]
   );
 
-  const row = result.rows[0];
-  if (!row) {
+  const updated = await getAssinaturaById(id);
+  if (!updated) {
     throw new Error("Assinatura não encontrada.");
   }
-
-  return mapAssinatura(row);
+  return updated;
 }
 
 export async function updateAssinatura(
@@ -167,37 +187,113 @@ export async function updateAssinatura(
     throw new Error("Status de assinatura inválido.");
   }
 
-  const plano = (input.plano ?? current.plano).trim() || "padrao";
+  const plano =
+    (input.plano ?? current.planoId ?? current.plano).trim() || "essencial";
+
+  if (input.plano !== undefined) {
+    const planoExists = await query<{ id: string }>(
+      `SELECT id FROM planos WHERE id = $1 AND ativo = TRUE`,
+      [plano]
+    );
+    if (!planoExists.rows[0]) {
+      throw new Error("Plano inválido.");
+    }
+  }
+
   const observacao =
     input.observacao !== undefined
       ? input.observacao.trim()
       : current.observacao;
 
-  const result = await query<AssinaturaRow>(
-    `UPDATE assinaturas a
+  await query(
+    `UPDATE assinaturas
      SET
        status = $2,
        plano = $3,
+       plano_id = $3,
        observacao = $4,
        atualizada_em = NOW()
-     FROM instituicoes i
-     WHERE a.id = $1 AND i.id = a.instituicao_id
-     RETURNING
-       a.id,
-       a.instituicao_id,
-       i.nome AS instituicao_nome,
-       a.status,
-       a.plano,
-       a.iniciada_em,
-       a.atualizada_em,
-       a.observacao`,
+     WHERE id = $1`,
     [id, status, plano, observacao]
   );
 
-  const row = result.rows[0];
-  if (!row) {
+  const updated = await getAssinaturaById(id);
+  if (!updated) {
     throw new Error("Assinatura não encontrada.");
   }
+  return updated;
+}
 
-  return mapAssinatura(row);
+export async function syncAssinaturaFromStripe(input: {
+  assinaturaId?: string;
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
+  stripePriceId?: string | null;
+  planoId?: string | null;
+  status: AssinaturaStatus;
+  observacao?: string;
+}): Promise<Assinatura | null> {
+  let targetId = input.assinaturaId ?? null;
+
+  if (!targetId && input.stripeSubscriptionId) {
+    const bySub = await getAssinaturaByStripeSubscriptionId(
+      input.stripeSubscriptionId
+    );
+    targetId = bySub?.id ?? null;
+  }
+
+  if (!targetId && input.stripeCustomerId) {
+    const byCustomer = await getAssinaturaByStripeCustomerId(
+      input.stripeCustomerId
+    );
+    targetId = byCustomer?.id ?? null;
+  }
+
+  if (!targetId) {
+    return null;
+  }
+
+  const current = await getAssinaturaById(targetId);
+  if (!current) {
+    return null;
+  }
+
+  const planoId = input.planoId ?? current.planoId ?? current.plano;
+
+  await query(
+    `UPDATE assinaturas
+     SET
+       status = $2,
+       plano = $3,
+       plano_id = $3,
+       stripe_customer_id = COALESCE($4, stripe_customer_id),
+       stripe_subscription_id = COALESCE($5, stripe_subscription_id),
+       stripe_price_id = COALESCE($6, stripe_price_id),
+       observacao = COALESCE($7, observacao),
+       atualizada_em = NOW()
+     WHERE id = $1`,
+    [
+      targetId,
+      input.status,
+      planoId,
+      input.stripeCustomerId ?? null,
+      input.stripeSubscriptionId ?? null,
+      input.stripePriceId ?? null,
+      input.observacao?.trim() ?? null,
+    ]
+  );
+
+  return getAssinaturaById(targetId);
+}
+
+export async function setAssinaturaStripeCustomer(
+  id: string,
+  stripeCustomerId: string
+): Promise<void> {
+  await query(
+    `UPDATE assinaturas
+     SET stripe_customer_id = $2, atualizada_em = NOW()
+     WHERE id = $1`,
+    [id, stripeCustomerId]
+  );
 }

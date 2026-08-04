@@ -35,8 +35,26 @@ O NeoGuardAI **precisa** de PostgreSQL. Sem `DATABASE_URL`, o login e o dashboar
 | --- | --- |
 | `AUTH_SECRET` | `openssl rand -base64 32` |
 | `DATABASE_URL` | `postgresql://neoguard:neoguard@db:5432/neoguardai` |
+| `APP_URL` | `https://neoguardai.rcsolucoes.app.br` |
 | `SEED_ON_START` | `true` (primeira subida) |
+| `STRIPE_SECRET_KEY` | chave secreta Stripe (mesmo modo dos price IDs) |
+| `STRIPE_WEBHOOK_SECRET` | secret do endpoint `POST /api/stripe/webhook` |
 | `OPENAI_API_KEY` | opcional |
+
+### Stripe (assinaturas)
+
+1. Crie um webhook no Dashboard apontando para:
+   `https://neoguardai.rcsolucoes.app.br/api/stripe/webhook`
+2. Eventos mínimos:
+   - `checkout.session.completed`
+   - `customer.subscription.created`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+   - `invoice.paid`
+   - `invoice.payment_failed`
+3. No painel admin: **Planos** (catálogo) e **Assinaturas** (Checkout / Portal).
+
+Planos seed: Essencial (R$ 297), Profissional (R$ 697), Rede (R$ 1.497).
 
 O Compose sobe:
 - `db` → PostgreSQL 16

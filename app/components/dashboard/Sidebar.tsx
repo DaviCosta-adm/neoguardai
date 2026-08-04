@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   Settings,
   Stethoscope,
+  Tags,
   Users,
 } from "lucide-react";
 import type { UserRole } from "@/app/lib/types";
@@ -48,6 +49,7 @@ const platformLinks = [
     label: "Assinaturas",
     icon: CreditCard,
   },
+  { href: "/dashboard/planos", label: "Planos", icon: Tags },
   { href: "/dashboard/usuarios", label: "Usuários", icon: Users },
   { href: "/dashboard/relatorios", label: "Relatórios", icon: FileBarChart },
   { href: "/dashboard/atlas", label: "Atlas", icon: Bot },
