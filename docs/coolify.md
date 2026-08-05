@@ -85,12 +85,21 @@ O Compose sobe:
 - `db` → PostgreSQL 16
 - `app` → Next.js (roda migrate/seed no boot e depois `next start`)
 
-### Redeploy automático via GitHub Actions
+### CI e redeploy automático via GitHub Actions
 
-Há um workflow em `.github/workflows/coolify-deploy.yml`. No GitHub → Secrets → Actions:
+O workflow `.github/workflows/ci.yml` roda em todo push/`pull_request`:
+
+1. `npm ci` → `npm run lint` → `npm run build`
+2. Só se o build passar **e** o push for em `main`, dispara o webhook do Coolify
+
+Assim uma versão quebrada não chega ao servidor.
+
+No GitHub → Settings → Secrets and variables → Actions:
 
 - `COOLIFY_WEBHOOK_URL` — URL do Deploy Webhook do recurso no Coolify
 - `COOLIFY_TOKEN` — opcional, se o webhook exigir Bearer token
+
+Recomendado: em Settings → Branches → Branch protection de `main`, exigir o status check **Lint e build** antes do merge.
 
 ## Opção B — App + Postgres separados no Coolify
 

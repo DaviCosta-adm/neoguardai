@@ -21,6 +21,11 @@ npm run db:seed:local
 npm run dev
 ```
 
+## CI (GitHub Actions)
+
+Em todo push e pull request, o workflow `.github/workflows/ci.yml` roda lint + build.
+O deploy no Coolify só é disparado em `main` depois que o build passa — evita subir versão quebrada.
+
 ## Docker / Coolify
 
 O projeto já inclui Postgres no `docker-compose.yml`.
