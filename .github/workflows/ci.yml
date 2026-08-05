@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Lint e build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        env:
+          AUTH_SECRET: ci-build-placeholder-secret-change-me
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: npm run build
+
+  deploy:
+    name: Deploy Coolify
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Disparar webhook do Coolify
+        env:
+          COOLIFY_WEBHOOK_URL: ${{ secrets.COOLIFY_WEBHOOK_URL }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+        run: |
+          if [ -z "$COOLIFY_WEBHOOK_URL" ]; then
+            echo "COOLIFY_WEBHOOK_URL não configurado — pulando disparo."
+            echo "No Coolify: Application → Webhooks → Deploy Webhook."
+            echo "No GitHub: Settings → Secrets → Actions → COOLIFY_WEBHOOK_URL"
+            exit 0
+          fi
+
+          if [ -n "$COOLIFY_TOKEN" ]; then
+            curl -fsS -X POST "$COOLIFY_WEBHOOK_URL" \
+              -H "Authorization: Bearer $COOLIFY_TOKEN"
+          else
+            curl -fsS -X POST "$COOLIFY_WEBHOOK_URL"
+          fi
+
+          echo "Webhook Coolify disparado após CI verde."

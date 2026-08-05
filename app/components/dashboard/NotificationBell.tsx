@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Bell } from "lucide-react";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 type Notificacao = {
   id: string;
@@ -14,25 +14,52 @@ type Notificacao = {
   criadoEm: string;
 };
 
+async function fetchNotificacoes(): Promise<{
+  items: Notificacao[];
+  naoLidas: number;
+} | null> {
+  const response = await fetch("/api/notificacoes");
+  if (!response.ok) return null;
+  const data = await response.json();
+  return {
+    items: data.notificacoes ?? [],
+    naoLidas: data.naoLidas ?? 0,
+  };
+}
+
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notificacao[]>([]);
   const [naoLidas, setNaoLidas] = useState(0);
   const [pending, startTransition] = useTransition();
 
-  const refresh = useCallback(async () => {
-    const response = await fetch("/api/notificacoes");
-    if (!response.ok) return;
-    const data = await response.json();
-    setItems(data.notificacoes ?? []);
-    setNaoLidas(data.naoLidas ?? 0);
+  useEffect(() => {
+    let active = true;
+
+    async function load() {
+      const data = await fetchNotificacoes();
+      if (!active || !data) return;
+      setItems(data.items);
+      setNaoLidas(data.naoLidas);
+    }
+
+    const timer = window.setInterval(() => {
+      void load();
+    }, 45000);
+
+    void load();
+
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
   }, []);
 
-  useEffect(() => {
-    void refresh();
-    const timer = window.setInterval(() => void refresh(), 45000);
-    return () => window.clearInterval(timer);
-  }, [refresh]);
+  function applyData(data: { items: Notificacao[]; naoLidas: number } | null) {
+    if (!data) return;
+    setItems(data.items);
+    setNaoLidas(data.naoLidas);
+  }
 
   async function markAll() {
     await fetch("/api/notificacoes", {
@@ -40,7 +67,9 @@ export default function NotificationBell() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ all: true }),
     });
-    startTransition(() => void refresh());
+    startTransition(() => {
+      void fetchNotificacoes().then(applyData);
+    });
   }
 
   async function markOne(id: string) {
@@ -49,7 +78,9 @@ export default function NotificationBell() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     });
-    startTransition(() => void refresh());
+    startTransition(() => {
+      void fetchNotificacoes().then(applyData);
+    });
   }
 
   return (
@@ -58,7 +89,11 @@ export default function NotificationBell() {
         type="button"
         onClick={() => {
           setOpen((prev) => !prev);
-          if (!open) startTransition(() => void refresh());
+          if (!open) {
+            startTransition(() => {
+              void fetchNotificacoes().then(applyData);
+            });
+          }
         }}
         className="relative rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-gray-300 transition hover:border-cyan-400/30 hover:text-cyan-200"
         aria-label="Notificações"
