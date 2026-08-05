@@ -14,7 +14,7 @@ Base do SaaS na seguinte ordem:
 10. Deploy Coolify com Postgres (Docker Compose) ✅
 
 Próximos refinamentos possíveis: configurar Resend em produção
-(`RESEND_API_KEY` + `EMAIL_FROM`) e agendar o cron de snapshots.
+(`RESEND_API_KEY`) e agendar o cron de snapshots no Coolify.
 
 Stripe + planos: ✅ (Checkout, Portal, webhook; preços R$ 250 / R$ 650 / R$ 1.650).
 Convites de usuários: ✅
@@ -27,6 +27,8 @@ Treino supervisionado com histórico longitudinal: ✅
 Edição/importação de indicadores + busca rápida: ✅
 Batch/cron de snapshots (`/api/cron/risco-snapshots`): ✅
 Alertas por e-mail em risco alto/crítico (Resend quando configurado): ✅
+Notificações in-app (sino do header): ✅
+(`/api/notificacoes`, migration `009_notificacoes.sql`)
 
 Deploy: veja `docs/coolify.md`.
 

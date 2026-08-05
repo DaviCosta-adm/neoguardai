@@ -2,6 +2,7 @@ import "server-only";
 
 import { listUsuarios } from "@/app/lib/auth/users";
 import { getAppBaseUrl } from "@/app/lib/config/app-url";
+import { criarNotificacoesParaUsuarios } from "@/app/lib/data/notificacoes";
 import { sendEmail } from "@/app/lib/email/send";
 import type { Aluno, RiskLevel } from "@/app/lib/types";
 
@@ -13,9 +14,13 @@ export async function notificarRiscoCritico(input: {
   percentual: number;
   nivel: RiskLevel;
   explicacao: string;
-}): Promise<{ sent: number; mode: "resend" | "log" | "skip" }> {
+}): Promise<{
+  sent: number;
+  inApp: number;
+  mode: "resend" | "log" | "skip";
+}> {
   if (!NIVEIS_ALERTA.includes(input.nivel)) {
-    return { sent: 0, mode: "skip" };
+    return { sent: 0, inApp: 0, mode: "skip" };
   }
 
   // Evita spam se já estava no mesmo patamar alto/crítico.
@@ -24,7 +29,7 @@ export async function notificarRiscoCritico(input: {
     NIVEIS_ALERTA.includes(input.nivelAnterior) &&
     input.nivelAnterior === input.nivel
   ) {
-    return { sent: 0, mode: "skip" };
+    return { sent: 0, inApp: 0, mode: "skip" };
   }
 
   const destinatarios = (
@@ -34,12 +39,15 @@ export async function notificarRiscoCritico(input: {
   );
 
   if (destinatarios.length === 0) {
-    return { sent: 0, mode: "skip" };
+    return { sent: 0, inApp: 0, mode: "skip" };
   }
 
   const baseUrl = getAppBaseUrl();
-  const link = `${baseUrl}/dashboard/alunos/${input.aluno.id}`;
-  const subject = `[NeoGuardAI] Risco ${input.nivel} — ${input.aluno.nome}`;
+  const href = `/dashboard/alunos/${input.aluno.id}`;
+  const link = `${baseUrl}${href}`;
+  const titulo = `Risco ${input.nivel} — ${input.aluno.nome}`;
+  const corpo = `${input.aluno.turma} · ${input.aluno.serie} · ${input.percentual}% — ${input.explicacao}`;
+  const subject = `[NeoGuardAI] ${titulo}`;
   const text = [
     `O aluno ${input.aluno.nome} (${input.aluno.turma} · ${input.aluno.serie}) atingiu risco ${input.nivel} (${input.percentual}%).`,
     "",
@@ -47,6 +55,15 @@ export async function notificarRiscoCritico(input: {
     "",
     `Abrir ficha: ${link}`,
   ].join("\n");
+
+  const inApp = await criarNotificacoesParaUsuarios({
+    usuarioIds: destinatarios.map((u) => u.id),
+    instituicaoId: input.aluno.instituicaoId,
+    tipo: "risco",
+    titulo,
+    corpo,
+    href,
+  });
 
   let sent = 0;
   let mode: "resend" | "log" = "log";
@@ -60,5 +77,5 @@ export async function notificarRiscoCritico(input: {
     if (result.sent) sent += 1;
   }
 
-  return { sent, mode };
+  return { sent, inApp, mode };
 }

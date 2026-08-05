@@ -1,8 +1,8 @@
 import LogoutButton from "@/app/components/dashboard/LogoutButton";
+import NotificationBell from "@/app/components/dashboard/NotificationBell";
 import QuickSearch from "@/app/components/dashboard/QuickSearch";
 import { requireAuth } from "@/app/lib/auth/dal";
 import { rotuloRole } from "@/app/lib/data/labels";
-import { Bell } from "lucide-react";
 
 export default async function Header({
   title,
@@ -36,13 +36,7 @@ export default async function Header({
         <div className="flex flex-wrap items-center gap-3">
           {auth.user.role !== "admin_neoguard" ? <QuickSearch /> : null}
 
-          <button
-            type="button"
-            className="rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-gray-300 transition hover:border-cyan-400/30 hover:text-cyan-200"
-            aria-label="Notificações"
-          >
-            <Bell size={16} />
-          </button>
+          <NotificationBell />
 
           <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-gray-200">
             <p className="font-medium">{auth.user.nome}</p>
