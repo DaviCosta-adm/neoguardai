@@ -92,6 +92,12 @@ export default function PlatformAdminHome({
                 Planos Stripe
               </Link>
               <Link
+                href="/dashboard/modelo"
+                className="rounded-xl border border-white/10 px-4 py-2 text-sm text-gray-200 transition hover:border-cyan-400/30"
+              >
+                Modelo de risco
+              </Link>
+              <Link
                 href="/dashboard/usuarios"
                 className="rounded-xl border border-white/10 px-4 py-2 text-sm text-gray-200 transition hover:border-cyan-400/30"
               >

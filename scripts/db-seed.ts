@@ -74,11 +74,27 @@ async function main() {
     await client.query("DELETE FROM timeline_events");
     await client.query("DELETE FROM intervencoes");
     await client.query("DELETE FROM alertas");
+    await client.query("DELETE FROM risco_snapshots");
     await client.query("DELETE FROM alunos");
     await client.query("DELETE FROM convites");
     await client.query("DELETE FROM usuarios");
     await client.query("DELETE FROM assinaturas");
     await client.query("DELETE FROM instituicoes");
+    await client.query("DELETE FROM modelo_risco WHERE id <> 'modelo-v2-base'");
+    await client.query(
+      `UPDATE modelo_risco SET ativo = TRUE WHERE id = 'modelo-v2-base'`
+    );
+    await client.query(
+      `INSERT INTO modelo_risco (id, versao, ativo, pesos, metricas, notas, treinado_em)
+       VALUES (
+         'modelo-v2-base', 'v2', TRUE,
+         '{"frequenciaBaixa":1,"frequenciaMedia":1,"faltasAltas":1,"faltasMedias":1,"desempenhoBaixo":1,"desempenhoMedio":1,"ocorrenciasAltas":1,"ocorrenciasMedias":1,"participacaoBaixa":1,"participacaoMedia":1,"pressaoFaltas":1,"pressaoFrequencia":1,"pressaoDesempenho":1,"pressaoParticipacao":1,"pressaoOcorrencias":1,"pressaoProjecao":1}'::jsonb,
+         '{"amostras":0,"mae":null,"brier":null,"fonte":"defaults"}'::jsonb,
+         'Pesos padrão do modelo explicável v2.',
+         NOW()
+       )
+       ON CONFLICT (id) DO UPDATE SET ativo = TRUE` 
+    );
 
     for (const instituicao of instituicoes) {
       await client.query(
@@ -155,6 +171,86 @@ async function main() {
           aluno.explicacaoAtlas,
           aluno.statusAcompanhamento,
           aluno.atualizadoEm,
+        ]
+      );
+
+      // Histórico longitudinal sintético (passado → outcome = risco atual).
+      const past = calcularRiscoPreditivo({
+        ...aluno,
+        frequencia: Math.min(100, aluno.frequencia + 4),
+        faltasConsecutivas: Math.max(0, aluno.faltasConsecutivas - 1),
+        desempenho: Math.min(10, aluno.desempenho + 0.4),
+        participacao: Math.min(100, aluno.participacao + 5),
+      });
+      const pastDate = new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString();
+      await client.query(
+        `INSERT INTO risco_snapshots (
+           id, aluno_id, instituicao_id, capturado_em,
+           frequencia, desempenho, faltas_consecutivas, ocorrencias, participacao,
+           risco_percentual, risco_nivel, fatores_risco, explicacao_atlas,
+           projecao_14d, tendencia, probabilidade_evasao,
+           modelo_versao, origem, outcome_risco, outcome_em, outcome_fonte
+         ) VALUES (
+           $1,$2,$3,$4,
+           $5,$6,$7,$8,$9,
+           $10,$11,$12::jsonb,$13,
+           $14,$15,$16,
+           'v2','seed',$17,$18,'seed_atual'
+         )`,
+        [
+          `rs-seed-${aluno.id}-1`,
+          aluno.id,
+          aluno.instituicaoId,
+          pastDate,
+          Math.min(100, aluno.frequencia + 4),
+          Math.min(10, aluno.desempenho + 0.4),
+          Math.max(0, aluno.faltasConsecutivas - 1),
+          aluno.ocorrencias,
+          Math.min(100, aluno.participacao + 5),
+          past.percentual,
+          past.nivel,
+          JSON.stringify(past.fatores),
+          past.explicacao,
+          past.projecao14d,
+          past.tendencia,
+          past.probabilidadeEvasao,
+          aluno.riscoPercentual,
+          aluno.atualizadoEm,
+        ]
+      );
+
+      const current = calcularRiscoPreditivo(aluno);
+      await client.query(
+        `INSERT INTO risco_snapshots (
+           id, aluno_id, instituicao_id, capturado_em,
+           frequencia, desempenho, faltas_consecutivas, ocorrencias, participacao,
+           risco_percentual, risco_nivel, fatores_risco, explicacao_atlas,
+           projecao_14d, tendencia, probabilidade_evasao,
+           modelo_versao, origem
+         ) VALUES (
+           $1,$2,$3,$4,
+           $5,$6,$7,$8,$9,
+           $10,$11,$12::jsonb,$13,
+           $14,$15,$16,
+           'v2','seed'
+         )`,
+        [
+          `rs-seed-${aluno.id}-2`,
+          aluno.id,
+          aluno.instituicaoId,
+          aluno.atualizadoEm,
+          aluno.frequencia,
+          aluno.desempenho,
+          aluno.faltasConsecutivas,
+          aluno.ocorrencias,
+          aluno.participacao,
+          current.percentual,
+          current.nivel,
+          JSON.stringify(current.fatores),
+          current.explicacao,
+          current.projecao14d,
+          current.tendencia,
+          current.probabilidadeEvasao,
         ]
       );
     }

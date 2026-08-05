@@ -11,12 +11,14 @@ import {
   rotuloIntervencao,
   rotuloStatusAcompanhamento,
 } from "@/app/lib/data/labels";
+import { getPesosAtivos } from "@/app/lib/data/modelo-risco";
 import {
   getAlertasDoAluno,
   getAlunoById,
   getIntervencoesDoAluno,
   getTimelineDoAluno,
 } from "@/app/lib/data/repository";
+import { listSnapshotsByAluno } from "@/app/lib/data/risco-snapshots";
 import {
   resumoPreditivoAluno,
   textoTendencia,
@@ -33,13 +35,19 @@ export default async function AlunoPage({
 
   if (!aluno) notFound();
 
-  const alertas = await getAlertasDoAluno(auth, aluno.id);
-  const intervencoes = await getIntervencoesDoAluno(auth, aluno.id);
-  const timeline = await getTimelineDoAluno(auth, aluno.id);
-  const especialistas = await listarEspecialistasDaInstituicao(
-    aluno.instituicaoId
-  );
-  const preditivo = resumoPreditivoAluno(aluno);
+  const [alertas, intervencoes, timeline, especialistas, modelo, snapshots] =
+    await Promise.all([
+      getAlertasDoAluno(auth, aluno.id),
+      getIntervencoesDoAluno(auth, aluno.id),
+      getTimelineDoAluno(auth, aluno.id),
+      listarEspecialistasDaInstituicao(aluno.instituicaoId),
+      getPesosAtivos(),
+      listSnapshotsByAluno(aluno.id, 8),
+    ]);
+  const preditivo = resumoPreditivoAluno(aluno, {
+    pesos: modelo.pesos,
+    versao: modelo.versao,
+  });
   const podeEncaminhar =
     auth.user.role === "coordenacao" ||
     auth.user.role === "admin_instituicao" ||
@@ -95,7 +103,7 @@ export default async function AlunoPage({
 
           <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-5">
             <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
-              Atlas · modelo v2
+              Atlas · modelo {preditivo.versao}
             </p>
             <p className="mt-3 text-sm leading-6 text-gray-200">
               {preditivo.explicacao}
@@ -110,6 +118,40 @@ export default async function AlunoPage({
             </div>
           </div>
         </section>
+
+        {snapshots.length > 0 ? (
+          <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+            <h3 className="text-lg font-semibold">Histórico longitudinal</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Snapshots usados no treino supervisionado do modelo.
+            </p>
+            <div className="mt-4 space-y-2">
+              {snapshots.map((snap) => (
+                <div
+                  key={snap.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2 text-sm"
+                >
+                  <div>
+                    <p className="text-gray-200">
+                      {snap.riscoPercentual}% → proj. {snap.projecao14d}%
+                      {snap.outcomeRisco != null
+                        ? ` · outcome ${snap.outcomeRisco}%`
+                        : ""}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(snap.capturadoEm).toLocaleString("pt-BR")} ·{" "}
+                      {snap.origem} · {snap.modeloVersao}
+                    </p>
+                  </div>
+                  <RiskBadge
+                    nivel={snap.riscoNivel}
+                    percentual={snap.riscoPercentual}
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
           <h3 className="text-lg font-semibold">Plano sugerido pelo modelo</h3>
