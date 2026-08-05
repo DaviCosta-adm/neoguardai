@@ -3,6 +3,7 @@ import "server-only";
 import { createHash, randomBytes } from "crypto";
 import { createUsuario, isValidRole } from "@/app/lib/data/admin-crud";
 import { getAppBaseUrl } from "@/app/lib/config/app-url";
+import { criarNotificacao } from "@/app/lib/data/notificacoes";
 import { sendEmail } from "@/app/lib/email/send";
 import { assertPodeCriarConvite } from "@/app/lib/data/plan-limits";
 import { query } from "@/app/lib/db/client";
@@ -332,6 +333,19 @@ export async function acceptConvite(input: {
      WHERE id = $1`,
     [row.id, usuario.id]
   );
+
+  try {
+    await criarNotificacao({
+      usuarioId: row.criado_por,
+      instituicaoId: row.instituicao_id,
+      tipo: "convite",
+      titulo: `Convite aceito — ${usuario.email}`,
+      corpo: `${usuario.nome} entrou como ${row.role} em ${row.instituicao_nome}.`,
+      href: "/dashboard/convites",
+    });
+  } catch (error) {
+    console.error("Falha ao notificar aceitação de convite:", error);
+  }
 
   return { usuarioId: usuario.id, email: usuario.email };
 }
