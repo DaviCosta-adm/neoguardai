@@ -75,6 +75,7 @@ async function main() {
     await client.query("DELETE FROM intervencoes");
     await client.query("DELETE FROM alertas");
     await client.query("DELETE FROM risco_snapshots");
+    await client.query("DELETE FROM notificacoes");
     await client.query("DELETE FROM alunos");
     await client.query("DELETE FROM convites");
     await client.query("DELETE FROM usuarios");
