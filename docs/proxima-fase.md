@@ -8,7 +8,22 @@ Base do SaaS na seguinte ordem:
 4. Score de risco explicável + alertas + intervenções ✅
 5. Autenticação + multi-tenant ✅
 6. Persistência real em PostgreSQL ✅
-7. Relatórios → módulo de especialistas → IA avançada / modelo preditivo ← próximo
+7. Relatórios ✅
+8. Módulo de especialistas ✅
+9. IA avançada / modelo preditivo v2 ✅
+10. Deploy Coolify com Postgres (Docker Compose) ✅
+
+Próximos refinamentos possíveis: treino supervisionado do modelo com histórico
+longitudinal; e-mail real via Resend (`RESEND_API_KEY` + `EMAIL_FROM`).
+
+Stripe + planos: ✅ (Checkout, Portal, webhook; preços R$ 250 / R$ 650 / R$ 1.650).
+Convites de usuários: ✅
+PDF nativo de relatórios: ✅
+Limites por plano (usuários/convites): ✅
+Onboarding da instituição pós-checkout: ✅
+(`/dashboard/onboarding`, migration `007_onboarding.sql`)
+
+Deploy: veja `docs/coolify.md`.
 
 ## Banco de dados
 

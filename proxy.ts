@@ -13,6 +13,14 @@ export default async function proxy(request: NextRequest) {
   );
   const isLogin = pathname === "/login";
 
+  // Não interferir em Server Actions / POST do formulário de login
+  const isServerAction = request.headers.has("next-action");
+  const isMutation = request.method !== "GET" && request.method !== "HEAD";
+
+  if (isServerAction || (isLogin && isMutation)) {
+    return NextResponse.next();
+  }
+
   const token = request.cookies.get(COOKIE_NAME)?.value;
   const session = await decrypt(token);
 

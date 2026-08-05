@@ -1,0 +1,31 @@
+name: Coolify deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disparar webhook do Coolify
+        env:
+          COOLIFY_WEBHOOK_URL: ${{ secrets.COOLIFY_WEBHOOK_URL }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+        run: |
+          if [ -z "$COOLIFY_WEBHOOK_URL" ]; then
+            echo "COOLIFY_WEBHOOK_URL não configurado — pulando disparo."
+            echo "No Coolify: Application → Webhooks → Deploy Webhook."
+            echo "No GitHub: Settings → Secrets → Actions → COOLIFY_WEBHOOK_URL"
+            exit 0
+          fi
+
+          if [ -n "$COOLIFY_TOKEN" ]; then
+            curl -fsS -X POST "$COOLIFY_WEBHOOK_URL" \
+              -H "Authorization: Bearer $COOLIFY_TOKEN"
+          else
+            curl -fsS -X POST "$COOLIFY_WEBHOOK_URL"
+          fi
+
+          echo "Webhook Coolify disparado."

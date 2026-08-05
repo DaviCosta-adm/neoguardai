@@ -1,34 +1,28 @@
 import { NextResponse } from "next/server";
+import { getAuthContext } from "@/app/lib/auth/dal";
+import { buildAtlasCaseContext } from "@/app/lib/atlas/context";
+import { explicacaoLocalAtlas } from "@/app/lib/risk/predictive";
 import { getOpenAI } from "@/app/lib/openai";
 
 export async function POST(request: Request) {
   try {
-    const { message } = await request.json();
+    const body = await request.json();
+    const message = String(body?.message ?? "").trim();
+    const alunoId = body?.alunoId ? String(body.alunoId) : undefined;
 
     if (!message) {
       return NextResponse.json(
-        {
-          error: "Mensagem não informada.",
-        },
-        {
-          status: 400,
-        }
+        { error: "Mensagem não informada." },
+        { status: 400 }
       );
     }
 
+    const auth = await getAuthContext();
+    const caseContext =
+      auth && alunoId ? await buildAtlasCaseContext(auth, alunoId) : null;
 
-    const response = await getOpenAI().chat.completions.create({
-
-      model: "gpt-4.1-mini",
-
-      messages: [
-
-        {
-          role: "system",
-          content: `
+    const systemBase = `
 Você é Atlas, o assistente oficial da NeoGuardAI.
-
-Sua função é ajudar visitantes e usuários da plataforma.
 
 A NeoGuardAI é uma plataforma SaaS especializada exclusivamente na
 prevenção da evasão escolar. Ela transforma dados educacionais em
@@ -47,41 +41,53 @@ Regras:
 - Sempre se apresente como Atlas quando necessário.
 - Não invente funcionalidades que a plataforma ainda não possui.
 - Explique riscos e conceitos de forma simples.
-          `,
-        },
+- Se houver contexto de caso, baseie a resposta nele e não invente dados.
+`.trim();
 
-        {
-          role: "user",
-          content: message,
-        },
+    try {
+      const response = await getOpenAI().chat.completions.create({
+        model: "gpt-4.1-mini",
+        messages: [
+          {
+            role: "system",
+            content: caseContext
+              ? `${systemBase}\n\n${caseContext.prompt}`
+              : systemBase,
+          },
+          {
+            role: "user",
+            content: message,
+          },
+        ],
+        temperature: 0.5,
+      });
 
-      ],
+      const reply =
+        response.choices[0]?.message?.content ??
+        "Não consegui gerar uma resposta.";
 
-      temperature: 0.7,
+      return NextResponse.json({
+        reply,
+        source: "openai",
+        preditivo: caseContext?.preditivo ?? null,
+      });
+    } catch (error) {
+      console.error("Atlas fallback local:", error);
 
-    });
+      const reply = explicacaoLocalAtlas(message, caseContext?.aluno ?? null);
 
-
-    const reply =
-      response.choices[0].message.content ??
-      "Não consegui gerar uma resposta.";
-
-
-    return NextResponse.json({
-      reply,
-    });
-
-
-   } catch (error) {
+      return NextResponse.json({
+        reply,
+        source: "local",
+        preditivo: caseContext?.preditivo ?? null,
+      });
+    }
+  } catch (error) {
     console.error("Erro no Atlas:", error);
 
     return NextResponse.json(
-      {
-        error: "Erro ao conectar com o Atlas.",
-      },
-      {
-        status: 500,
-      }
+      { error: "Erro ao conectar com o Atlas." },
+      { status: 500 }
     );
   }
 }

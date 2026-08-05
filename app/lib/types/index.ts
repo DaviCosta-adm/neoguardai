@@ -38,12 +38,68 @@ export interface Instituicao {
   nome: string;
 }
 
+export type AssinaturaStatus = "ativo" | "inativo" | "bloqueado";
+
+export interface Plano {
+  id: string;
+  nome: string;
+  descricao: string;
+  precoCentavos: number;
+  moeda: string;
+  intervalo: string;
+  maxAlunos: number;
+  maxUsuarios: number;
+  stripeProductId: string | null;
+  stripePriceId: string | null;
+  ativo: boolean;
+  ordem: number;
+}
+
+export interface Assinatura {
+  id: string;
+  instituicaoId: string;
+  instituicaoNome: string;
+  status: AssinaturaStatus;
+  plano: string;
+  planoId: string;
+  planoNome: string;
+  iniciadaEm: string;
+  atualizadaEm: string;
+  observacao: string;
+  stripeCustomerId: string | null;
+  stripeSubscriptionId: string | null;
+  stripePriceId: string | null;
+  onboardingCompleto: boolean;
+  onboardingEm: string | null;
+}
+
 export interface Usuario {
   id: string;
   nome: string;
   email: string;
   role: UserRole;
   instituicaoId: string;
+}
+
+export type ConviteStatus = "pendente" | "aceito" | "revogado" | "expirado";
+
+export interface Convite {
+  id: string;
+  email: string;
+  nome: string;
+  role: UserRole;
+  instituicaoId: string;
+  instituicaoNome: string;
+  status: ConviteStatus;
+  criadoPor: string;
+  criadoPorNome: string;
+  criadoEm: string;
+  expiraEm: string;
+  aceitoEm: string | null;
+  usuarioId: string | null;
+  observacao: string;
+  /** Presente apenas logo após a criação (token bruto). */
+  inviteUrl?: string;
 }
 
 export interface IndicadoresAluno {
@@ -109,3 +165,62 @@ export interface DashboardResumo {
   frequenciaMedia: number;
   intervencoesPendentes: number;
 }
+
+export interface InstituicaoResumo extends Instituicao {
+  totalEstudantes: number;
+  casosImediatos: number;
+  riscoCritico: number;
+  riscoAlto: number;
+  alertasAtivos: number;
+  usuarios: number;
+  frequenciaMedia: number;
+}
+
+export interface PlataformaResumo {
+  totalInstituicoes: number;
+  totalUsuarios: number;
+  totalEstudantes: number;
+  casosImediatos: number;
+  alertasAtivos: number;
+  intervencoesPendentes: number;
+  frequenciaMedia: number;
+  instituicoes: InstituicaoResumo[];
+}
+
+export type StatusEncaminhamento = "aberto" | "em_atendimento" | "concluido";
+
+export type TipoDevolutiva =
+  | "atendimento"
+  | "observacao"
+  | "devolutiva"
+  | "recomendacao";
+
+export interface Encaminhamento {
+  id: string;
+  alunoId: string;
+  instituicaoId: string;
+  especialistaId?: string;
+  criadoPor: string;
+  motivo: string;
+  status: StatusEncaminhamento;
+  criadoEm: string;
+  atualizadoEm: string;
+}
+
+export interface Devolutiva {
+  id: string;
+  encaminhamentoId: string;
+  autorId: string;
+  tipo: TipoDevolutiva;
+  conteudo: string;
+  criadoEm: string;
+}
+
+export type EncaminhamentoDetalhe = Encaminhamento & {
+  alunoNome: string;
+  alunoTurma: string;
+  riscoNivel: RiskLevel;
+  riscoPercentual: number;
+  especialistaNome?: string;
+  criadoPorNome: string;
+};

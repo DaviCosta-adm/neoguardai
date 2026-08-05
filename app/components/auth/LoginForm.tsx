@@ -1,11 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
-import { login, type LoginState } from "@/app/actions/auth";
-
-const initialState: LoginState = {};
+import { useState, useTransition } from "react";
 
 const contasDemo = [
+  "suporte@neoguard.ai — Admin NeoGuardAI (plataforma)",
   "ana@horizonte.edu.br — Coordenação (Horizonte)",
   "carlos@horizonte.edu.br — Especialista (Horizonte)",
   "maria@aurora.edu.br — Coordenação (Aurora)",
@@ -13,10 +11,41 @@ const contasDemo = [
 ];
 
 export default function LoginForm() {
-  const [state, action, pending] = useActionState(login, initialState);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const email = String(formData.get("email") ?? "");
+    const password = String(formData.get("password") ?? "");
+
+    setError(null);
+
+    startTransition(async () => {
+      try {
+        const response = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.error ?? "Não foi possível entrar.");
+          return;
+        }
+
+        window.location.href = data.redirectTo ?? "/dashboard";
+      } catch {
+        setError("Falha de rede ao tentar entrar.");
+      }
+    });
+  }
 
   return (
-    <form action={action} className="mt-8 space-y-4">
+    <form onSubmit={handleSubmit} className="mt-8 space-y-4">
       <div>
         <label htmlFor="email" className="text-sm text-gray-300">
           E-mail
@@ -45,9 +74,9 @@ export default function LoginForm() {
         />
       </div>
 
-      {state?.error ? (
+      {error ? (
         <p className="rounded-xl border border-rose-400/20 bg-rose-400/10 px-3 py-2 text-sm text-rose-300">
-          {state.error}
+          {error}
         </p>
       ) : null}
 
@@ -60,7 +89,9 @@ export default function LoginForm() {
       </button>
 
       <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3 text-xs leading-5 text-gray-500">
-        <p className="mb-1 font-medium text-gray-400">Contas demo (senha: demo123)</p>
+        <p className="mb-1 font-medium text-gray-400">
+          Contas demo (senha: demo123)
+        </p>
         <ul className="space-y-1">
           {contasDemo.map((item) => (
             <li key={item}>{item}</li>

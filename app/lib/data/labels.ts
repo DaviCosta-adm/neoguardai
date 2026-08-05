@@ -1,4 +1,11 @@
-import type { Aluno, Intervencao, UserRole } from "@/app/lib/types";
+import type {
+  Aluno,
+  AssinaturaStatus,
+  Intervencao,
+  StatusEncaminhamento,
+  TipoDevolutiva,
+  UserRole,
+} from "@/app/lib/types";
 
 export const rotuloIntervencao: Record<Intervencao["tipo"], string> = {
   conversa_aluno: "Conversa com o aluno",
@@ -28,9 +35,29 @@ export const rotuloRole: Record<UserRole, string> = {
   admin_neoguard: "Admin NeoGuardAI",
 };
 
+export const rotuloAssinaturaStatus: Record<AssinaturaStatus, string> = {
+  ativo: "Ativo",
+  inativo: "Inativo",
+  bloqueado: "Bloqueado",
+};
+
 export const prioridadeRisco: Record<Aluno["riscoNivel"], number> = {
   critico: 0,
   alto: 1,
   medio: 2,
   baixo: 3,
+};
+
+export const rotuloStatusEncaminhamento: Record<StatusEncaminhamento, string> =
+  {
+    aberto: "Aberto",
+    em_atendimento: "Em atendimento",
+    concluido: "Concluído",
+  };
+
+export const rotuloTipoDevolutiva: Record<TipoDevolutiva, string> = {
+  atendimento: "Atendimento",
+  observacao: "Observação",
+  devolutiva: "Devolutiva",
+  recomendacao: "Recomendação",
 };

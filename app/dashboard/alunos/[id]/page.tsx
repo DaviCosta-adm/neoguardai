@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import EncaminharForm from "@/app/components/dashboard/EncaminharForm";
 import Header from "@/app/components/dashboard/Header";
 import IntervencaoForm from "@/app/components/dashboard/IntervencaoForm";
+import RecalcularRiscoButton from "@/app/components/dashboard/RecalcularRiscoButton";
 import RiskBadge from "@/app/components/dashboard/RiskBadge";
 import { requireAuth } from "@/app/lib/auth/dal";
+import { listarEspecialistasDaInstituicao } from "@/app/lib/data/especialistas";
 import {
   rotuloIntervencao,
   rotuloStatusAcompanhamento,
@@ -14,6 +17,10 @@ import {
   getIntervencoesDoAluno,
   getTimelineDoAluno,
 } from "@/app/lib/data/repository";
+import {
+  resumoPreditivoAluno,
+  textoTendencia,
+} from "@/app/lib/risk/predictive";
 
 export default async function AlunoPage({
   params,
@@ -29,6 +36,14 @@ export default async function AlunoPage({
   const alertas = await getAlertasDoAluno(auth, aluno.id);
   const intervencoes = await getIntervencoesDoAluno(auth, aluno.id);
   const timeline = await getTimelineDoAluno(auth, aluno.id);
+  const especialistas = await listarEspecialistasDaInstituicao(
+    aluno.instituicaoId
+  );
+  const preditivo = resumoPreditivoAluno(aluno);
+  const podeEncaminhar =
+    auth.user.role === "coordenacao" ||
+    auth.user.role === "admin_instituicao" ||
+    auth.user.role === "admin_neoguard";
 
   return (
     <>
@@ -80,12 +95,35 @@ export default async function AlunoPage({
 
           <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-5">
             <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
-              Atlas
+              Atlas · modelo v2
             </p>
             <p className="mt-3 text-sm leading-6 text-gray-200">
-              {aluno.explicacaoAtlas}
+              {preditivo.explicacao}
             </p>
+            <div className="mt-4 grid gap-2 text-xs text-gray-300">
+              <p>Projeção 14 dias: {preditivo.projecao14d}%</p>
+              <p>{textoTendencia(preditivo.tendencia)}</p>
+              <p>Probabilidade estimada de evasão: {preditivo.probabilidadeEvasao}%</p>
+            </div>
+            <div className="mt-4">
+              <RecalcularRiscoButton alunoId={aluno.id} />
+            </div>
           </div>
+        </section>
+
+        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <h3 className="text-lg font-semibold">Plano sugerido pelo modelo</h3>
+          <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-gray-300">
+            {preditivo.planoSugerido.map((passo) => (
+              <li key={passo}>{passo}</li>
+            ))}
+          </ol>
+          <Link
+            href={`/dashboard/atlas`}
+            className="mt-4 inline-flex text-sm text-cyan-300 hover:text-cyan-200"
+          >
+            Abrir Atlas com este contexto →
+          </Link>
         </section>
 
         <section className="grid gap-6 xl:grid-cols-2">
@@ -160,6 +198,15 @@ export default async function AlunoPage({
             <IntervencaoForm alunoId={aluno.id} />
           </Panel>
         </section>
+
+        {podeEncaminhar ? (
+          <Panel title="Encaminhar para especialista">
+            <EncaminharForm
+              alunoId={aluno.id}
+              especialistas={especialistas}
+            />
+          </Panel>
+        ) : null}
 
         <Panel title="Linha do tempo do caso">
           <div className="space-y-3">

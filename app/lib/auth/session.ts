@@ -13,27 +13,46 @@ import {
 export type { SessionPayload };
 export { COOKIE_NAME, decrypt };
 
-export async function createSession(input: {
+type SessionCookieOptions = {
+  httpOnly: boolean;
+  secure: boolean;
+  expires: Date;
+  sameSite: "lax";
+  path: string;
+};
+
+export async function createSessionToken(input: {
   userId: string;
   role: UserRole;
   instituicaoId: string;
 }) {
   const expiresAt = new Date(Date.now() + SESSION_EXPIRATION_MS);
-  const session = await encrypt({
+  const value = await encrypt({
     userId: input.userId,
     role: input.role,
     instituicaoId: input.instituicaoId,
     expiresAt: expiresAt.toISOString(),
   });
 
-  const cookieStore = await cookies();
-  cookieStore.set(COOKIE_NAME, session, {
+  const options: SessionCookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     expires: expiresAt,
     sameSite: "lax",
     path: "/",
-  });
+  };
+
+  return { name: COOKIE_NAME, value, options, expiresAt };
+}
+
+export async function createSession(input: {
+  userId: string;
+  role: UserRole;
+  instituicaoId: string;
+}) {
+  const cookie = await createSessionToken(input);
+  const cookieStore = await cookies();
+  cookieStore.set(cookie.name, cookie.value, cookie.options);
 }
 
 export async function deleteSession() {

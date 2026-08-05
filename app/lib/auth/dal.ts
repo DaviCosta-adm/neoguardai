@@ -7,7 +7,8 @@ import {
   getInstituicaoById,
   toPublicUser,
 } from "@/app/lib/auth/users";
-import { getSession } from "@/app/lib/auth/session";
+import { deleteSession, getSession } from "@/app/lib/auth/session";
+import { getAssinaturaStatusByInstituicaoId } from "@/app/lib/data/assinaturas";
 import type { Instituicao, Usuario } from "@/app/lib/types";
 
 export type AuthContext = {
@@ -30,21 +31,42 @@ export const getAuthContext = cache(async (): Promise<AuthContext | null> => {
   const session = await verifySession();
   if (!session) return null;
 
-  const dbUser = await findUserById(session.userId);
-  if (!dbUser) return null;
+  try {
+    const dbUser = await findUserById(session.userId);
+    if (!dbUser) {
+      await deleteSession();
+      return null;
+    }
 
-  const instituicao =
-    (await getInstituicaoById(dbUser.instituicaoId)) ??
-    ({
-      id: dbUser.instituicaoId,
-      nome: "NeoGuardAI",
-    } satisfies Instituicao);
+    if (dbUser.role !== "admin_neoguard") {
+      const assinaturaStatus = await getAssinaturaStatusByInstituicaoId(
+        dbUser.instituicaoId
+      );
+      if (
+        assinaturaStatus === "inativo" ||
+        assinaturaStatus === "bloqueado"
+      ) {
+        await deleteSession();
+        return null;
+      }
+    }
 
-  return {
-    user: toPublicUser(dbUser),
-    instituicao,
-    session,
-  };
+    const instituicao =
+      (await getInstituicaoById(dbUser.instituicaoId)) ??
+      ({
+        id: dbUser.instituicaoId,
+        nome: "NeoGuardAI",
+      } satisfies Instituicao);
+
+    return {
+      user: toPublicUser(dbUser),
+      instituicao,
+      session,
+    };
+  } catch (error) {
+    console.error("Erro ao carregar sessão:", error);
+    return null;
+  }
 });
 
 export async function requireAuth(): Promise<AuthContext> {
@@ -54,5 +76,32 @@ export async function requireAuth(): Promise<AuthContext> {
     redirect("/login");
   }
 
+  return auth;
+}
+
+/** Para Route Handlers — não usa redirect. */
+export async function requireAuthApi(): Promise<AuthContext | null> {
+  return getAuthContext();
+}
+
+/** Super admin da plataforma — para Route Handlers. */
+export async function requireAdminNeoGuardApi(): Promise<AuthContext | null> {
+  const auth = await getAuthContext();
+  if (!auth || auth.user.role !== "admin_neoguard") {
+    return null;
+  }
+  return auth;
+}
+
+/** Super admin ou admin da instituição — para convites e gestão local. */
+export async function requireAdminOrInstituicaoApi(): Promise<AuthContext | null> {
+  const auth = await getAuthContext();
+  if (
+    !auth ||
+    (auth.user.role !== "admin_neoguard" &&
+      auth.user.role !== "admin_instituicao")
+  ) {
+    return null;
+  }
   return auth;
 }

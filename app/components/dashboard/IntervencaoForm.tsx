@@ -1,24 +1,45 @@
 "use client";
 
-import { useActionState } from "react";
-import {
-  criarIntervencao,
-  type IntervencaoState,
-} from "@/app/actions/intervencoes";
+import { useState, useTransition } from "react";
 import { rotuloIntervencao } from "@/app/lib/data/labels";
 import type { TipoIntervencao } from "@/app/lib/types";
-
-const initialState: IntervencaoState = {};
 
 const tipos = Object.keys(rotuloIntervencao) as TipoIntervencao[];
 
 export default function IntervencaoForm({ alunoId }: { alunoId: string }) {
-  const [state, action, pending] = useActionState(criarIntervencao, initialState);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const tipo = String(formData.get("tipo") ?? "");
+    const descricao = String(formData.get("descricao") ?? "");
+
+    setError(null);
+    setSuccess(null);
+
+    startTransition(async () => {
+      const response = await fetch("/api/intervencoes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ alunoId, tipo, descricao }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error ?? "Erro ao salvar.");
+        return;
+      }
+
+      setSuccess("Intervenção registrada.");
+      window.location.reload();
+    });
+  }
 
   return (
-    <form action={action} className="space-y-3">
-      <input type="hidden" name="alunoId" value={alunoId} />
-
+    <form onSubmit={handleSubmit} className="space-y-3">
       <div>
         <label htmlFor="tipo" className="text-xs text-gray-500">
           Tipo de ação
@@ -51,12 +72,8 @@ export default function IntervencaoForm({ alunoId }: { alunoId: string }) {
         />
       </div>
 
-      {state?.error ? (
-        <p className="text-sm text-rose-300">{state.error}</p>
-      ) : null}
-      {state?.success ? (
-        <p className="text-sm text-emerald-300">{state.success}</p>
-      ) : null}
+      {error ? <p className="text-sm text-rose-300">{error}</p> : null}
+      {success ? <p className="text-sm text-emerald-300">{success}</p> : null}
 
       <button
         type="submit"
