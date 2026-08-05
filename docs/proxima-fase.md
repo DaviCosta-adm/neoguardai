@@ -13,11 +13,13 @@ Base do SaaS na seguinte ordem:
 9. IA avançada / modelo preditivo v2 ✅
 10. Deploy Coolify com Postgres (Docker Compose) ✅
 
-Próximos refinamentos possíveis: PDF nativo, treino supervisionado do modelo
-com histórico longitudinal.
+Próximos refinamentos possíveis: treino supervisionado do modelo com histórico
+longitudinal; onboarding da instituição pós-checkout.
 
-Stripe + planos: ✅ (Checkout, Portal, webhook e catálogo Essencial/Profissional/Rede).
-Convites de usuários: ✅ (link seguro, aceite público, admin plataforma/instituição).
+Stripe + planos: ✅ (Checkout, Portal, webhook; preços R$ 250 / R$ 650 / R$ 1.650).
+Convites de usuários: ✅
+PDF nativo de relatórios: ✅
+Limites por plano (usuários/convites): ✅
 
 Deploy: veja `docs/coolify.md`.
 
