@@ -19,11 +19,12 @@ export default function QuickSearch() {
   const deferred = useDeferredValue(query);
   const [resultados, setResultados] = useState<Resultado[]>([]);
   const [open, setOpen] = useState(false);
+  const buscaAtiva = deferred.trim().length >= 2;
+  const resultadosVisiveis = buscaAtiva ? resultados : [];
 
   useEffect(() => {
     const q = deferred.trim();
     if (q.length < 2) {
-      setResultados([]);
       return;
     }
 
@@ -69,10 +70,10 @@ export default function QuickSearch() {
 
       {open && query.trim().length >= 2 ? (
         <div className="absolute right-0 z-30 mt-2 w-[min(100vw-2rem,22rem)] rounded-2xl border border-white/10 bg-[#0a1020] p-2 shadow-xl">
-          {resultados.length === 0 ? (
+          {resultadosVisiveis.length === 0 ? (
             <p className="px-3 py-2 text-sm text-gray-500">Nenhum resultado.</p>
           ) : (
-            resultados.map((item) => (
+            resultadosVisiveis.map((item) => (
               <Link
                 key={item.id}
                 href={item.href}
