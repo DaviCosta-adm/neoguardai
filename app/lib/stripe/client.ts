@@ -1,6 +1,7 @@
 import "server-only";
 
 import Stripe from "stripe";
+import { getAppBaseUrl as getSharedAppBaseUrl } from "@/app/lib/config/app-url";
 
 let stripeClient: Stripe | null = null;
 
@@ -27,16 +28,7 @@ export function getStripe(): Stripe {
 }
 
 export function getAppBaseUrl() {
-  const fromEnv =
-    process.env.APP_URL?.trim() ||
-    process.env.NEXT_PUBLIC_APP_URL?.trim() ||
-    process.env.COOLIFY_URL?.trim();
-
-  if (fromEnv) {
-    return fromEnv.replace(/\/$/, "");
-  }
-
-  return "https://neoguardai.rcsolucoes.app.br";
+  return getSharedAppBaseUrl();
 }
 
 export function mapStripeSubscriptionStatus(

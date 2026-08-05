@@ -92,3 +92,16 @@ export async function requireAdminNeoGuardApi(): Promise<AuthContext | null> {
   }
   return auth;
 }
+
+/** Super admin ou admin da instituição — para convites e gestão local. */
+export async function requireAdminOrInstituicaoApi(): Promise<AuthContext | null> {
+  const auth = await getAuthContext();
+  if (
+    !auth ||
+    (auth.user.role !== "admin_neoguard" &&
+      auth.user.role !== "admin_instituicao")
+  ) {
+    return null;
+  }
+  return auth;
+}

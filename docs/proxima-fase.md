@@ -13,10 +13,11 @@ Base do SaaS na seguinte ordem:
 9. IA avançada / modelo preditivo v2 ✅
 10. Deploy Coolify com Postgres (Docker Compose) ✅
 
-Próximos refinamentos possíveis: PDF nativo, convites de usuários, treino
-supervisionado do modelo com histórico longitudinal.
+Próximos refinamentos possíveis: PDF nativo, treino supervisionado do modelo
+com histórico longitudinal.
 
 Stripe + planos: ✅ (Checkout, Portal, webhook e catálogo Essencial/Profissional/Rede).
+Convites de usuários: ✅ (link seguro, aceite público, admin plataforma/instituição).
 
 Deploy: veja `docs/coolify.md`.
 

@@ -46,6 +46,12 @@ export default async function ConfiguracoesPage() {
               >
                 Usuários ({usuarios.length})
               </Link>
+              <Link
+                href="/dashboard/convites"
+                className="rounded-xl border border-white/10 px-4 py-2 text-sm text-gray-200"
+              >
+                Convites
+              </Link>
             </div>
           </div>
         ) : (
@@ -55,6 +61,14 @@ export default async function ConfiguracoesPage() {
             <p className="mt-1 text-xs text-gray-500">
               ID: {auth.instituicao.id}
             </p>
+            {auth.user.role === "admin_instituicao" ? (
+              <Link
+                href="/dashboard/convites"
+                className="mt-4 inline-flex rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-100"
+              >
+                Convidar usuários
+              </Link>
+            ) : null}
           </div>
         )}
 
@@ -82,8 +96,10 @@ export default async function ConfiguracoesPage() {
 
         <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-6 text-sm text-gray-400">
           {isPlatformAdmin
-            ? "Próximo passo: convites, criação de instituições e políticas globais de acesso."
-            : "Dados de usuários e instituição já vêm do PostgreSQL. Próximo passo: gestão completa de permissões e convites."}
+            ? "Convites e CRUD de instituições/usuários já estão disponíveis no menu da plataforma."
+            : auth.user.role === "admin_instituicao"
+              ? "Use Convites para adicionar coordenação, especialistas e outros admins da instituição."
+              : "Dados de usuários e instituição já vêm do PostgreSQL."}
         </div>
       </div>
     </>

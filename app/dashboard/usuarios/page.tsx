@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import Header from "@/app/components/dashboard/Header";
 import UsuarioAdminPanel from "@/app/components/dashboard/admin/UsuarioAdminPanel";
@@ -25,7 +26,13 @@ export default async function UsuariosPage() {
         eyebrow="NeoGuardAI · Plataforma"
       />
 
-      <div className="px-6 py-6">
+      <div className="space-y-4 px-6 py-6">
+        <Link
+          href="/dashboard/convites"
+          className="inline-flex rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-100 transition hover:bg-cyan-400/20"
+        >
+          Convidar por e-mail
+        </Link>
         <UsuarioAdminPanel
           usuarios={usuarios}
           instituicoes={instituicoes}
