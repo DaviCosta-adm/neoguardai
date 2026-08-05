@@ -52,6 +52,12 @@ export default async function ConfiguracoesPage() {
               >
                 Convites
               </Link>
+              <Link
+                href="/dashboard/operacao"
+                className="rounded-xl border border-white/10 px-4 py-2 text-sm text-gray-200"
+              >
+                Operação
+              </Link>
             </div>
           </div>
         ) : (
