@@ -14,12 +14,14 @@ Base do SaaS na seguinte ordem:
 10. Deploy Coolify com Postgres (Docker Compose) ✅
 
 Próximos refinamentos possíveis: treino supervisionado do modelo com histórico
-longitudinal; onboarding da instituição pós-checkout.
+longitudinal; e-mail real via Resend (`RESEND_API_KEY` + `EMAIL_FROM`).
 
 Stripe + planos: ✅ (Checkout, Portal, webhook; preços R$ 250 / R$ 650 / R$ 1.650).
 Convites de usuários: ✅
 PDF nativo de relatórios: ✅
 Limites por plano (usuários/convites): ✅
+Onboarding da instituição pós-checkout: ✅
+(`/dashboard/onboarding`, migration `007_onboarding.sql`)
 
 Deploy: veja `docs/coolify.md`.
 

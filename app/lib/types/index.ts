@@ -69,6 +69,8 @@ export interface Assinatura {
   stripeCustomerId: string | null;
   stripeSubscriptionId: string | null;
   stripePriceId: string | null;
+  onboardingCompleto: boolean;
+  onboardingEm: string | null;
 }
 
 export interface Usuario {
