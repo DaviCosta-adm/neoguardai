@@ -50,10 +50,13 @@ jobs:
           COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
         run: |
           if [ -z "$COOLIFY_WEBHOOK_URL" ]; then
-            echo "COOLIFY_WEBHOOK_URL não configurado — pulando disparo."
-            echo "No Coolify: Application → Webhooks → Deploy Webhook."
-            echo "No GitHub: Settings → Secrets → Actions → COOLIFY_WEBHOOK_URL"
-            exit 0
+            echo "::error::COOLIFY_WEBHOOK_URL não configurado."
+            echo "No Coolify: Application → Webhooks → Deploy Webhook (copie a URL)."
+            echo "No GitHub: Settings → Secrets and variables → Actions → New repository secret"
+            echo "  Name: COOLIFY_WEBHOOK_URL"
+            echo "  Value: URL do Deploy Webhook (UUID b114n2paozyfbfjc7en35pgv)"
+            echo "Opcional: COOLIFY_TOKEN se o webhook exigir Bearer."
+            exit 1
           fi
 
           if [ -n "$COOLIFY_TOKEN" ]; then

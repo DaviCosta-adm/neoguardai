@@ -94,15 +94,17 @@ O workflow `.github/workflows/ci.yml` roda em todo push/`pull_request`:
 
 Assim uma versão quebrada não chega ao servidor.
 
-No GitHub → Settings → Secrets and variables → Actions:
+No GitHub → Settings → Secrets and variables → Actions (obrigatório para o job Deploy):
 
-- `COOLIFY_WEBHOOK_URL` — URL do Deploy Webhook do recurso no Coolify
+- `COOLIFY_WEBHOOK_URL` — URL do **Deploy Webhook** do app `neoguardai` (Coolify → Webhooks)
 - `COOLIFY_TOKEN` — opcional, se o webhook exigir Bearer token
+
+Sem `COOLIFY_WEBHOOK_URL`, o job **Deploy Coolify** falha de propósito (não pula em silêncio).
 
 Recomendado:
 
 1. Em Settings → Branches → Branch protection de `main`, exigir o status check **Lint e build** antes do merge.
-2. No Coolify, desative o auto-deploy por push do Git e use só o webhook disparado por este workflow — assim o servidor só atualiza após CI verde.
+2. No Coolify, mantenha **Auto Deploy** desligado e use só o webhook disparado por este workflow — assim o servidor só atualiza após CI verde.
 
 ## Opção B — App + Postgres separados no Coolify
 
