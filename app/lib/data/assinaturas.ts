@@ -17,6 +17,8 @@ type AssinaturaRow = {
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
   stripe_price_id: string | null;
+  onboarding_completo: boolean | null;
+  onboarding_em: Date | string | null;
 };
 
 const STATUSES: AssinaturaStatus[] = ["ativo", "inativo", "bloqueado"];
@@ -42,6 +44,8 @@ function mapAssinatura(row: AssinaturaRow): Assinatura {
     stripeCustomerId: row.stripe_customer_id,
     stripeSubscriptionId: row.stripe_subscription_id,
     stripePriceId: row.stripe_price_id,
+    onboardingCompleto: Boolean(row.onboarding_completo),
+    onboardingEm: row.onboarding_em ? toIso(row.onboarding_em) : null,
   };
 }
 
@@ -59,7 +63,9 @@ const ASSINATURA_SELECT = `
     a.observacao,
     a.stripe_customer_id,
     a.stripe_subscription_id,
-    a.stripe_price_id
+    a.stripe_price_id,
+    a.onboarding_completo,
+    a.onboarding_em
   FROM assinaturas a
   JOIN instituicoes i ON i.id = a.instituicao_id
   LEFT JOIN planos p ON p.id = a.plano_id
@@ -120,6 +126,77 @@ export async function getAssinaturaStatusByInstituicaoId(
   );
 
   return result.rows[0]?.status ?? null;
+}
+
+export async function getAssinaturaByInstituicaoId(
+  instituicaoId: string
+): Promise<Assinatura | null> {
+  const result = await query<AssinaturaRow>(
+    `${ASSINATURA_SELECT} WHERE a.instituicao_id = $1`,
+    [instituicaoId]
+  );
+  const row = result.rows[0];
+  return row ? mapAssinatura(row) : null;
+}
+
+export async function needsInstitutionOnboarding(
+  instituicaoId: string | null | undefined
+): Promise<boolean> {
+  if (!instituicaoId) return false;
+  const assinatura = await getAssinaturaByInstituicaoId(instituicaoId);
+  if (!assinatura) return false;
+  if (assinatura.status !== "ativo") return false;
+  return !assinatura.onboardingCompleto;
+}
+
+export async function completeOnboarding(
+  assinaturaId: string
+): Promise<Assinatura> {
+  const current = await getAssinaturaById(assinaturaId);
+  if (!current) {
+    throw new Error("Assinatura não encontrada.");
+  }
+
+  await query(
+    `UPDATE assinaturas
+     SET
+       onboarding_completo = TRUE,
+       onboarding_em = NOW(),
+       atualizada_em = NOW()
+     WHERE id = $1`,
+    [assinaturaId]
+  );
+
+  const updated = await getAssinaturaById(assinaturaId);
+  if (!updated) {
+    throw new Error("Assinatura não encontrada.");
+  }
+  return updated;
+}
+
+export async function resetOnboarding(
+  assinaturaId: string
+): Promise<Assinatura> {
+  const current = await getAssinaturaById(assinaturaId);
+  if (!current) {
+    throw new Error("Assinatura não encontrada.");
+  }
+
+  await query(
+    `UPDATE assinaturas
+     SET
+       onboarding_completo = FALSE,
+       onboarding_em = NULL,
+       atualizada_em = NOW()
+     WHERE id = $1`,
+    [assinaturaId]
+  );
+
+  const updated = await getAssinaturaById(assinaturaId);
+  if (!updated) {
+    throw new Error("Assinatura não encontrada.");
+  }
+  return updated;
 }
 
 export async function createAssinaturaForInstituicao(

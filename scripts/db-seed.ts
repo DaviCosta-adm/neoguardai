@@ -87,8 +87,8 @@ async function main() {
       );
       await client.query(
         `INSERT INTO assinaturas
-          (id, instituicao_id, status, plano, plano_id, observacao)
-         VALUES ($1, $2, 'ativo', 'essencial', 'essencial', $3)`,
+          (id, instituicao_id, status, plano, plano_id, observacao, onboarding_completo, onboarding_em)
+         VALUES ($1, $2, 'ativo', 'essencial', 'essencial', $3, TRUE, NOW())`,
         [
           `ass-${instituicao.id}`,
           instituicao.id,

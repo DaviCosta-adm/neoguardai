@@ -65,7 +65,7 @@ export async function createCheckoutSessionForAssinatura(input: {
     customer: customerId,
     client_reference_id: assinatura.id,
     line_items: [{ price: plano.stripePriceId, quantity: 1 }],
-    success_url: `${baseUrl}/dashboard/assinaturas?checkout=success`,
+    success_url: `${baseUrl}/dashboard/onboarding?checkout=success&assinaturaId=${encodeURIComponent(assinatura.id)}`,
     cancel_url: `${baseUrl}/dashboard/assinaturas?checkout=cancel`,
     subscription_data: {
       metadata: {

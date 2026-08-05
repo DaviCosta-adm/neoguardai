@@ -170,6 +170,18 @@ export default function AssinaturaAdminPanel({
                       Sem assinatura Stripe vinculada
                     </p>
                   )}
+                  {!assinatura.onboardingCompleto ? (
+                    <p className="mt-1 text-xs text-amber-200/80">
+                      Onboarding pendente
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-xs text-gray-600">
+                      Onboarding concluído
+                      {assinatura.onboardingEm
+                        ? ` em ${new Date(assinatura.onboardingEm).toLocaleDateString("pt-BR")}`
+                        : ""}
+                    </p>
+                  )}
                 </div>
                 <span
                   className={`inline-flex w-fit rounded-full border px-2.5 py-1 text-xs ${statusStyles(
@@ -288,6 +300,15 @@ export default function AssinaturaAdminPanel({
                 >
                   Ver catálogo
                 </Link>
+                {!assinatura.onboardingCompleto &&
+                assinatura.status === "ativo" ? (
+                  <Link
+                    href={`/dashboard/onboarding?assinaturaId=${encodeURIComponent(assinatura.id)}`}
+                    className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-sm text-amber-100 transition hover:bg-amber-400/20"
+                  >
+                    Continuar onboarding
+                  </Link>
+                ) : null}
               </div>
             </div>
           );

@@ -96,7 +96,20 @@ Use o host interno do Postgres do Coolify (não `127.0.0.1` do container do app)
 2. Entre com `ana@horizonte.edu.br` / `demo123`
 3. Quando estiver estável, defina `SEED_ON_START=false` para não resetar dados a cada restart
 
+### Onboarding pós-checkout
+
+Após o Checkout Stripe, o `success_url` aponta para `/dashboard/onboarding`.
+A migration `007_onboarding.sql` adiciona `onboarding_completo` / `onboarding_em`
+em `assinaturas`. Instituições novas passam pelo wizard; demos já vêm concluídas.
+
 ## Erros comuns
+
+### Coolify API 500 / site 503 (`MISCONF Redis`)
+
+Se o Coolify não responde (`/api/v1/*` → 500) e o app fica 503, o Redis do
+Coolify provavelmente está sem disco para persistir (`MISCONF ... unable to
+persist to disk`). Corrija o Redis/disco do host Coolify antes de redeploy ou
+alterar envs (`SEED_ON_START`).
 
 ### `DATABASE_URL não configurada`
 Não há Postgres ligado ao app. Adicione o serviço `db` ou um Postgres do Coolify e preencha `DATABASE_URL`.
