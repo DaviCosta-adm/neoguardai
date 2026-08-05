@@ -98,6 +98,12 @@ export default function PlatformAdminHome({
                 Ver usuários
               </Link>
               <Link
+                href="/dashboard/convites"
+                className="rounded-xl border border-white/10 px-4 py-2 text-sm text-gray-200 transition hover:border-cyan-400/30"
+              >
+                Convites
+              </Link>
+              <Link
                 href="/dashboard/configuracoes"
                 className="rounded-xl border border-white/10 px-4 py-2 text-sm text-gray-200 transition hover:border-cyan-400/30"
               >

@@ -79,6 +79,27 @@ export interface Usuario {
   instituicaoId: string;
 }
 
+export type ConviteStatus = "pendente" | "aceito" | "revogado" | "expirado";
+
+export interface Convite {
+  id: string;
+  email: string;
+  nome: string;
+  role: UserRole;
+  instituicaoId: string;
+  instituicaoNome: string;
+  status: ConviteStatus;
+  criadoPor: string;
+  criadoPorNome: string;
+  criadoEm: string;
+  expiraEm: string;
+  aceitoEm: string | null;
+  usuarioId: string | null;
+  observacao: string;
+  /** Presente apenas logo após a criação (token bruto). */
+  inviteUrl?: string;
+}
+
 export interface IndicadoresAluno {
   frequencia: number;
   desempenho: number;

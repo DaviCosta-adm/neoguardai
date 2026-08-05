@@ -11,6 +11,7 @@ import {
   FileBarChart,
   GraduationCap,
   LayoutDashboard,
+  MailPlus,
   Settings,
   Stethoscope,
   Tags,
@@ -51,6 +52,7 @@ const platformLinks = [
   },
   { href: "/dashboard/planos", label: "Planos", icon: Tags },
   { href: "/dashboard/usuarios", label: "Usuários", icon: Users },
+  { href: "/dashboard/convites", label: "Convites", icon: MailPlus },
   { href: "/dashboard/relatorios", label: "Relatórios", icon: FileBarChart },
   { href: "/dashboard/atlas", label: "Atlas", icon: Bot },
   { href: "/dashboard/configuracoes", label: "Configurações", icon: Settings },
@@ -71,6 +73,13 @@ function linksForRole(role: UserRole) {
         "/dashboard/atlas",
       ].includes(link.href)
     );
+  }
+
+  if (role === "admin_instituicao") {
+    return [
+      ...schoolLinks,
+      { href: "/dashboard/convites", label: "Convites", icon: MailPlus },
+    ];
   }
 
   return schoolLinks;
