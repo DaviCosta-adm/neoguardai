@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import ExportPdfButton from "@/app/components/dashboard/ExportPdfButton";
 import Header from "@/app/components/dashboard/Header";
 import RiskBadge from "@/app/components/dashboard/RiskBadge";
 import { requireAuth } from "@/app/lib/auth/dal";
@@ -46,12 +47,18 @@ export default async function RelatorioAlunoPage({
           >
             ← Voltar aos relatórios
           </Link>
-          <Link
-            href={`/dashboard/alunos/${aluno.id}`}
-            className="rounded-xl border border-white/10 px-3 py-2 text-sm text-gray-300"
-          >
-            Abrir caso
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <ExportPdfButton
+              href={`/api/relatorios/aluno/${aluno.id}/pdf`}
+              label="Baixar PDF"
+            />
+            <Link
+              href={`/dashboard/alunos/${aluno.id}`}
+              className="rounded-xl border border-white/10 px-3 py-2 text-sm text-gray-300"
+            >
+              Abrir caso
+            </Link>
+          </div>
         </div>
 
         <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">

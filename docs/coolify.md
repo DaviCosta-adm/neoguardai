@@ -54,7 +54,7 @@ O NeoGuardAI **precisa** de PostgreSQL. Sem `DATABASE_URL`, o login e o dashboar
    - `invoice.payment_failed`
 3. No painel admin: **Planos** (catálogo) e **Assinaturas** (Checkout / Portal).
 
-Planos seed: Essencial (R$ 297), Profissional (R$ 697), Rede (R$ 1.497).
+Planos seed: Essencial (R$ 250), Profissional (R$ 650), Rede (R$ 1.650).
 
 ### Convites (opcional)
 

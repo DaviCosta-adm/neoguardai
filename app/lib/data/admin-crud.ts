@@ -3,6 +3,7 @@ import "server-only";
 import { hashSync } from "bcryptjs";
 import { query } from "@/app/lib/db/client";
 import { createAssinaturaForInstituicao } from "@/app/lib/data/assinaturas";
+import { assertPodeCriarUsuario } from "@/app/lib/data/plan-limits";
 import type { Instituicao, UserRole, Usuario } from "@/app/lib/types";
 import { toPublicUser, type DbUser } from "@/app/lib/auth/users";
 
@@ -151,6 +152,8 @@ export async function createUsuario(input: {
   if (exists.rows[0]) {
     throw new Error("Já existe um usuário com este e-mail.");
   }
+
+  await assertPodeCriarUsuario(input.instituicaoId);
 
   const id = slugId("user");
   const passwordHash = hashSync(password, 10);

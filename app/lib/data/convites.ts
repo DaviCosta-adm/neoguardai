@@ -4,6 +4,7 @@ import { createHash, randomBytes } from "crypto";
 import { createUsuario, isValidRole } from "@/app/lib/data/admin-crud";
 import { getAppBaseUrl } from "@/app/lib/config/app-url";
 import { sendEmail } from "@/app/lib/email/send";
+import { assertPodeCriarConvite } from "@/app/lib/data/plan-limits";
 import { query } from "@/app/lib/db/client";
 import type { Convite, ConviteStatus, UserRole } from "@/app/lib/types";
 
@@ -197,6 +198,8 @@ export async function createConvite(input: {
   if (pending.rows[0]) {
     throw new Error("Já existe um convite pendente para este e-mail.");
   }
+
+  await assertPodeCriarConvite(input.instituicaoId);
 
   const id = `conv-${randomBytes(8).toString("hex")}`;
   const rawToken = randomBytes(32).toString("hex");

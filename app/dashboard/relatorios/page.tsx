@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import ExportCsvButton from "@/app/components/dashboard/ExportCsvButton";
+import ExportPdfButton from "@/app/components/dashboard/ExportPdfButton";
 import Header from "@/app/components/dashboard/Header";
 import RiskBadge from "@/app/components/dashboard/RiskBadge";
 import { requireAuth } from "@/app/lib/auth/dal";
@@ -54,6 +55,10 @@ export default async function RelatoriosPage() {
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-lg font-semibold">Exportações</h2>
             <div className="flex flex-wrap gap-2">
+              <ExportPdfButton
+                href="/api/relatorios/pdf"
+                label="Relatório PDF"
+              />
               <ExportCsvButton
                 filename={`casos-criticos-${slug(relatorio.instituicao)}.csv`}
                 content={csvCasosCriticos(relatorio.casosCriticos)}
@@ -72,8 +77,8 @@ export default async function RelatoriosPage() {
             </div>
           </div>
           <p className="text-sm text-gray-400">
-            Exportações em CSV com dados da instituição autenticada. PDF pode
-            ser gerado a partir da impressão do relatório individual.
+            Exporte o resumo institucional em PDF ou os recortes analíticos em
+            CSV. O relatório individual de cada aluno também tem PDF dedicado.
           </p>
         </section>
 
