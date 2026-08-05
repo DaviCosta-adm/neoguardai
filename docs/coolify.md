@@ -56,6 +56,15 @@ O NeoGuardAI **precisa** de PostgreSQL. Sem `DATABASE_URL`, o login e o dashboar
 
 Planos seed: Essencial (R$ 297), Profissional (R$ 697), Rede (R$ 1.497).
 
+### Convites (opcional)
+
+| Variável | Exemplo |
+| --- | --- |
+| `RESEND_API_KEY` | chave Resend |
+| `EMAIL_FROM` | `NeoGuardAI <onboarding@seudominio.com>` |
+
+Sem e-mail, o painel mostra o link do convite para copiar.
+
 O Compose sobe:
 - `db` → PostgreSQL 16
 - `app` → Next.js (roda migrate/seed no boot e depois `next start`)
