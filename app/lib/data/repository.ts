@@ -20,11 +20,15 @@ import type {
   Alerta,
   Aluno,
   DashboardResumo,
+  IndicadoresAluno,
   Intervencao,
   TimelineEvent,
   TipoIntervencao,
   Usuario,
 } from "@/app/lib/types";
+import { calcularRiscoPreditivo } from "@/app/lib/risk/predictive";
+import { notificarRiscoCritico } from "@/app/lib/email/alerts";
+import { assertPodeCriarAluno } from "@/app/lib/data/plan-limits";
 
 function alunosScopeSql(
   auth: AuthContext,
@@ -301,4 +305,299 @@ export async function registrarIntervencao(
     status,
     proximaRevisao: input.proximaRevisao,
   };
+}
+
+function parseIndicadores(input: Partial<IndicadoresAluno>): IndicadoresAluno {
+  const frequencia = Number(input.frequencia);
+  const desempenho = Number(input.desempenho);
+  const faltasConsecutivas = Number(input.faltasConsecutivas);
+  const ocorrencias = Number(input.ocorrencias);
+  const participacao = Number(input.participacao);
+
+  if (
+    [frequencia, desempenho, faltasConsecutivas, ocorrencias, participacao].some(
+      (v) => Number.isNaN(v)
+    )
+  ) {
+    throw new Error("Indicadores inválidos.");
+  }
+
+  return {
+    frequencia: Math.min(100, Math.max(0, frequencia)),
+    desempenho: Math.min(10, Math.max(0, desempenho)),
+    faltasConsecutivas: Math.max(0, Math.round(faltasConsecutivas)),
+    ocorrencias: Math.max(0, Math.round(ocorrencias)),
+    participacao: Math.min(100, Math.max(0, Math.round(participacao))),
+  };
+}
+
+export async function atualizarIndicadoresAluno(
+  auth: AuthContext,
+  alunoId: string,
+  indicadoresInput: Partial<IndicadoresAluno>,
+  options?: { notificar?: boolean }
+): Promise<Aluno> {
+  if (
+    auth.user.role !== "coordenacao" &&
+    auth.user.role !== "admin_instituicao" &&
+    auth.user.role !== "admin_neoguard"
+  ) {
+    throw new Error("Sem permissão para editar indicadores.");
+  }
+
+  const aluno = await getAlunoById(auth, alunoId);
+  if (!aluno) {
+    throw new Error("Aluno não encontrado.");
+  }
+
+  const indicadores = parseIndicadores(indicadoresInput);
+  const { pesos, versao } = await getPesosAtivos();
+  const preditivo = calcularRiscoPreditivo(indicadores, { pesos, versao });
+  const agora = new Date().toISOString();
+  const nivelAnterior = aluno.riscoNivel;
+
+  await query(
+    `UPDATE alunos
+     SET frequencia = $2,
+         desempenho = $3,
+         faltas_consecutivas = $4,
+         ocorrencias = $5,
+         participacao = $6,
+         risco_percentual = $7,
+         risco_nivel = $8,
+         fatores_risco = $9::jsonb,
+         explicacao_atlas = $10,
+         atualizado_em = $11
+     WHERE id = $1`,
+    [
+      aluno.id,
+      indicadores.frequencia,
+      indicadores.desempenho,
+      indicadores.faltasConsecutivas,
+      indicadores.ocorrencias,
+      indicadores.participacao,
+      preditivo.percentual,
+      preditivo.nivel,
+      JSON.stringify(preditivo.fatores),
+      preditivo.explicacao,
+      agora,
+    ]
+  );
+
+  await query(
+    `INSERT INTO timeline_events
+      (id, aluno_id, tipo, titulo, descricao, criado_em)
+     VALUES ($1,$2,'atualizacao_risco',$3,$4,$5)`,
+    [
+      `tl-${crypto.randomUUID()}`,
+      aluno.id,
+      "Indicadores atualizados",
+      `Score ${preditivo.percentual}% (${preditivo.nivel}) · modelo ${versao}.`,
+      agora,
+    ]
+  );
+
+  const atualizado: Aluno = {
+    ...aluno,
+    ...indicadores,
+    riscoPercentual: preditivo.percentual,
+    riscoNivel: preditivo.nivel,
+    fatoresRisco: preditivo.fatores,
+    explicacaoAtlas: preditivo.explicacao,
+    atualizadoEm: agora,
+  };
+
+  await registrarSnapshotRisco({
+    aluno: atualizado,
+    origem: "manual",
+    pesos,
+    versao,
+    capturadoEm: agora,
+  });
+
+  if (options?.notificar !== false) {
+    try {
+      await notificarRiscoCritico({
+        aluno: atualizado,
+        nivelAnterior,
+        percentual: preditivo.percentual,
+        nivel: preditivo.nivel,
+        explicacao: preditivo.explicacao,
+      });
+    } catch (error) {
+      console.error("Falha ao notificar risco crítico:", error);
+    }
+  }
+
+  return atualizado;
+}
+
+export async function buscarAlunos(
+  auth: AuthContext,
+  termo: string,
+  limit = 8
+): Promise<Aluno[]> {
+  const q = termo.trim();
+  if (q.length < 2) return [];
+
+  const alunos = await listarAlunosPorPrioridade(auth);
+  const lower = q.toLowerCase();
+  return alunos
+    .filter(
+      (aluno) =>
+        aluno.nome.toLowerCase().includes(lower) ||
+        aluno.turma.toLowerCase().includes(lower) ||
+        aluno.serie.toLowerCase().includes(lower)
+    )
+    .slice(0, limit);
+}
+
+export async function importarIndicadoresCsv(
+  auth: AuthContext,
+  csvText: string
+): Promise<{ atualizados: number; criados: number; erros: string[] }> {
+  if (
+    auth.user.role !== "coordenacao" &&
+    auth.user.role !== "admin_instituicao" &&
+    auth.user.role !== "admin_neoguard"
+  ) {
+    throw new Error("Sem permissão para importar indicadores.");
+  }
+
+  if (auth.user.role === "admin_neoguard") {
+    throw new Error(
+      "Importe como admin/coordenação da instituição (multi-tenant)."
+    );
+  }
+
+  const linhas = csvText
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (linhas.length < 2) {
+    throw new Error("CSV vazio. Inclua cabeçalho e ao menos uma linha.");
+  }
+
+  const header = linhas[0].toLowerCase().split(",").map((h) => h.trim());
+  const required = [
+    "nome",
+    "turma",
+    "serie",
+    "frequencia",
+    "desempenho",
+    "faltas_consecutivas",
+    "ocorrencias",
+    "participacao",
+  ];
+  for (const col of required) {
+    if (!header.includes(col)) {
+      throw new Error(`CSV precisa da coluna "${col}".`);
+    }
+  }
+
+  const idx = (name: string) => header.indexOf(name);
+  const existentes = await listarAlunosPorPrioridade(auth);
+  const byNome = new Map(
+    existentes.map((a) => [a.nome.trim().toLowerCase(), a])
+  );
+
+  let atualizados = 0;
+  let criados = 0;
+  const erros: string[] = [];
+
+  for (let i = 1; i < linhas.length; i += 1) {
+    const cols = linhas[i].split(",").map((c) => c.trim());
+    try {
+      const nome = cols[idx("nome")];
+      const turma = cols[idx("turma")];
+      const serie = cols[idx("serie")];
+      const indicadores = parseIndicadores({
+        frequencia: Number(cols[idx("frequencia")]),
+        desempenho: Number(cols[idx("desempenho")]),
+        faltasConsecutivas: Number(cols[idx("faltas_consecutivas")]),
+        ocorrencias: Number(cols[idx("ocorrencias")]),
+        participacao: Number(cols[idx("participacao")]),
+      });
+
+      if (!nome || !turma || !serie) {
+        throw new Error("nome/turma/série obrigatórios");
+      }
+
+      const atual = byNome.get(nome.toLowerCase());
+      if (atual) {
+        await atualizarIndicadoresAluno(auth, atual.id, indicadores, {
+          notificar: false,
+        });
+        atualizados += 1;
+      } else {
+        await assertPodeCriarAluno(auth.user.instituicaoId);
+        const { pesos, versao } = await getPesosAtivos();
+        const preditivo = calcularRiscoPreditivo(indicadores, {
+          pesos,
+          versao,
+        });
+        const id = `alu-${crypto.randomUUID().replace(/-/g, "").slice(0, 10)}`;
+        const agora = new Date().toISOString();
+        await query(
+          `INSERT INTO alunos (
+             id, instituicao_id, nome, turma, serie,
+             frequencia, desempenho, faltas_consecutivas, ocorrencias, participacao,
+             risco_percentual, risco_nivel, fatores_risco, explicacao_atlas,
+             status_acompanhamento, atualizado_em
+           ) VALUES (
+             $1,$2,$3,$4,$5,
+             $6,$7,$8,$9,$10,
+             $11,$12,$13::jsonb,$14,
+             'novo',$15
+           )`,
+          [
+            id,
+            auth.user.instituicaoId,
+            nome,
+            turma,
+            serie,
+            indicadores.frequencia,
+            indicadores.desempenho,
+            indicadores.faltasConsecutivas,
+            indicadores.ocorrencias,
+            indicadores.participacao,
+            preditivo.percentual,
+            preditivo.nivel,
+            JSON.stringify(preditivo.fatores),
+            preditivo.explicacao,
+            agora,
+          ]
+        );
+        const novo: Aluno = {
+          id,
+          instituicaoId: auth.user.instituicaoId,
+          nome,
+          turma,
+          serie,
+          ...indicadores,
+          riscoPercentual: preditivo.percentual,
+          riscoNivel: preditivo.nivel,
+          fatoresRisco: preditivo.fatores,
+          explicacaoAtlas: preditivo.explicacao,
+          statusAcompanhamento: "novo",
+          atualizadoEm: agora,
+        };
+        await registrarSnapshotRisco({
+          aluno: novo,
+          origem: "batch",
+          pesos,
+          versao,
+          capturadoEm: agora,
+        });
+        byNome.set(nome.toLowerCase(), novo);
+        criados += 1;
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "erro desconhecido";
+      erros.push(`Linha ${i + 1}: ${message}`);
+    }
+  }
+
+  return { atualizados, criados, erros };
 }

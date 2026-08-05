@@ -13,8 +13,8 @@ Base do SaaS na seguinte ordem:
 9. IA avançada / modelo preditivo v2 ✅
 10. Deploy Coolify com Postgres (Docker Compose) ✅
 
-Próximos refinamentos possíveis: e-mail real via Resend (`RESEND_API_KEY` +
-`EMAIL_FROM`).
+Próximos refinamentos possíveis: configurar Resend em produção
+(`RESEND_API_KEY` + `EMAIL_FROM`) e agendar o cron de snapshots.
 
 Stripe + planos: ✅ (Checkout, Portal, webhook; preços R$ 250 / R$ 650 / R$ 1.650).
 Convites de usuários: ✅
@@ -24,6 +24,9 @@ Onboarding da instituição pós-checkout: ✅
 (`/dashboard/onboarding`, migration `007_onboarding.sql`)
 Treino supervisionado com histórico longitudinal: ✅
 (`/dashboard/modelo`, migration `008_risco_historico.sql`)
+Edição/importação de indicadores + busca rápida: ✅
+Batch/cron de snapshots (`/api/cron/risco-snapshots`): ✅
+Alertas por e-mail em risco alto/crítico (Resend quando configurado): ✅
 
 Deploy: veja `docs/coolify.md`.
 

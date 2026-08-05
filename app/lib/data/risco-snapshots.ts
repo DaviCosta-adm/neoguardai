@@ -251,3 +251,71 @@ export async function countSnapshots(): Promise<{
     comOutcome: Number(result.rows[0]?.com_outcome ?? 0),
   };
 }
+
+/** Captura snapshot de todos os alunos (cron / batch admin). */
+export async function capturarSnapshotsBatch(options?: {
+  instituicaoId?: string;
+  pesos?: Partial<PesosRisco> | null;
+  versao?: string;
+}): Promise<{ capturados: number }> {
+  const result = await query<{
+    id: string;
+    instituicao_id: string;
+    nome: string;
+    turma: string;
+    serie: string;
+    frequencia: string | number;
+    desempenho: string | number;
+    faltas_consecutivas: number;
+    ocorrencias: number;
+    participacao: number;
+    risco_percentual: number;
+    risco_nivel: RiskLevel;
+    fatores_risco: string[] | string;
+    explicacao_atlas: string;
+    status_acompanhamento: Aluno["statusAcompanhamento"];
+    atualizado_em: Date | string;
+  }>(
+    options?.instituicaoId
+      ? `SELECT * FROM alunos WHERE instituicao_id = $1`
+      : `SELECT * FROM alunos`,
+    options?.instituicaoId ? [options.instituicaoId] : []
+  );
+
+  let capturados = 0;
+  for (const row of result.rows) {
+    const fatores = Array.isArray(row.fatores_risco)
+      ? row.fatores_risco
+      : (JSON.parse(String(row.fatores_risco || "[]")) as string[]);
+    const aluno: Aluno = {
+      id: row.id,
+      instituicaoId: row.instituicao_id,
+      nome: row.nome,
+      turma: row.turma,
+      serie: row.serie,
+      frequencia: Number(row.frequencia),
+      desempenho: Number(row.desempenho),
+      faltasConsecutivas: row.faltas_consecutivas,
+      ocorrencias: row.ocorrencias,
+      participacao: row.participacao,
+      riscoPercentual: row.risco_percentual,
+      riscoNivel: row.risco_nivel,
+      fatoresRisco: fatores,
+      explicacaoAtlas: row.explicacao_atlas,
+      statusAcompanhamento: row.status_acompanhamento,
+      atualizadoEm:
+        row.atualizado_em instanceof Date
+          ? row.atualizado_em.toISOString()
+          : String(row.atualizado_em),
+    };
+    await registrarSnapshotRisco({
+      aluno,
+      origem: "batch",
+      pesos: options?.pesos,
+      versao: options?.versao,
+    });
+    capturados += 1;
+  }
+
+  return { capturados };
+}

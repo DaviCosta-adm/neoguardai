@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import EncaminharForm from "@/app/components/dashboard/EncaminharForm";
 import Header from "@/app/components/dashboard/Header";
+import IndicadoresForm from "@/app/components/dashboard/IndicadoresForm";
 import IntervencaoForm from "@/app/components/dashboard/IntervencaoForm";
 import RecalcularRiscoButton from "@/app/components/dashboard/RecalcularRiscoButton";
 import RiskBadge from "@/app/components/dashboard/RiskBadge";
@@ -49,6 +50,10 @@ export default async function AlunoPage({
     versao: modelo.versao,
   });
   const podeEncaminhar =
+    auth.user.role === "coordenacao" ||
+    auth.user.role === "admin_instituicao" ||
+    auth.user.role === "admin_neoguard";
+  const podeEditarIndicadores =
     auth.user.role === "coordenacao" ||
     auth.user.role === "admin_instituicao" ||
     auth.user.role === "admin_neoguard";
@@ -118,6 +123,8 @@ export default async function AlunoPage({
             </div>
           </div>
         </section>
+
+        {podeEditarIndicadores ? <IndicadoresForm aluno={aluno} /> : null}
 
         {snapshots.length > 0 ? (
           <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">

@@ -56,14 +56,30 @@ O NeoGuardAI **precisa** de PostgreSQL. Sem `DATABASE_URL`, o login e o dashboar
 
 Planos seed: Essencial (R$ 250), Profissional (R$ 650), Rede (R$ 1.650).
 
-### Convites (opcional)
+### Convites e alertas (opcional)
 
 | Variável | Exemplo |
 | --- | --- |
 | `RESEND_API_KEY` | chave Resend |
 | `EMAIL_FROM` | `NeoGuardAI <onboarding@seudominio.com>` |
 
-Sem e-mail, o painel mostra o link do convite para copiar.
+Sem e-mail, o painel mostra o link do convite para copiar e os alertas de
+risco alto/crítico ficam só no log do servidor.
+
+### Cron de snapshots longitudinais
+
+| Variável | Exemplo |
+| --- | --- |
+| `CRON_SECRET` | `openssl rand -hex 24` |
+
+Agende um POST diário (Coolify Scheduled Tasks / curl externo):
+
+```bash
+curl -X POST https://neoguardai.rcsolucoes.app.br/api/cron/risco-snapshots \
+  -H "Authorization: Bearer $CRON_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
 
 O Compose sobe:
 - `db` → PostgreSQL 16
