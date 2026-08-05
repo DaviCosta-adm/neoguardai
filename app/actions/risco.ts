@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/app/lib/auth/dal";
+import { getPesosAtivos } from "@/app/lib/data/modelo-risco";
+import { registrarSnapshotRisco } from "@/app/lib/data/risco-snapshots";
 import { query } from "@/app/lib/db/client";
 import { getAlunoById } from "@/app/lib/data/repository";
 import { calcularRiscoPreditivo } from "@/app/lib/risk/predictive";
@@ -13,7 +15,8 @@ export async function recalcularRiscoAlunoAction(formData: FormData) {
 
   if (!aluno) return;
 
-  const preditivo = calcularRiscoPreditivo(aluno);
+  const { pesos, versao } = await getPesosAtivos();
+  const preditivo = calcularRiscoPreditivo(aluno, { pesos, versao });
   const agora = new Date().toISOString();
 
   await query(
@@ -41,14 +44,30 @@ export async function recalcularRiscoAlunoAction(formData: FormData) {
     [
       `tl-${crypto.randomUUID()}`,
       aluno.id,
-      "Risco recalculado (modelo v2)",
+      `Risco recalculado (modelo ${versao})`,
       `Novo score ${preditivo.percentual}% com projeção ${preditivo.projecao14d}% em 14 dias.`,
       agora,
     ]
   );
 
+  await registrarSnapshotRisco({
+    aluno: {
+      ...aluno,
+      riscoPercentual: preditivo.percentual,
+      riscoNivel: preditivo.nivel,
+      fatoresRisco: preditivo.fatores,
+      explicacaoAtlas: preditivo.explicacao,
+      atualizadoEm: agora,
+    },
+    origem: "manual",
+    pesos,
+    versao,
+    capturadoEm: agora,
+  });
+
   revalidatePath(`/dashboard/alunos/${aluno.id}`);
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/atlas");
   revalidatePath("/dashboard/relatorios");
+  revalidatePath("/dashboard/modelo");
 }

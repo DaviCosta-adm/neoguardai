@@ -15,6 +15,7 @@ import {
   Settings,
   Stethoscope,
   Tags,
+  BrainCircuit,
   Users,
 } from "lucide-react";
 import type { UserRole } from "@/app/lib/types";
@@ -51,6 +52,7 @@ const platformLinks = [
     icon: CreditCard,
   },
   { href: "/dashboard/planos", label: "Planos", icon: Tags },
+  { href: "/dashboard/modelo", label: "Modelo de risco", icon: BrainCircuit },
   { href: "/dashboard/usuarios", label: "Usuários", icon: Users },
   { href: "/dashboard/convites", label: "Convites", icon: MailPlus },
   { href: "/dashboard/relatorios", label: "Relatórios", icon: FileBarChart },

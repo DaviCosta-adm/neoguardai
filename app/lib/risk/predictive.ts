@@ -4,12 +4,18 @@ import {
   rotuloRisco,
   type ResultadoRisco,
 } from "@/app/lib/risk/score";
+import {
+  DEFAULT_PESOS,
+  normalizePesos,
+  pressaoTendencia,
+  type PesosRisco,
+} from "@/app/lib/risk/weights";
 import type { Aluno, IndicadoresAluno } from "@/app/lib/types";
 
 export type TendenciaRisco = "subindo" | "estavel" | "caindo";
 
 export type ResultadoPreditivo = ResultadoRisco & {
-  versao: "v2";
+  versao: string;
   projecao14d: number;
   tendencia: TendenciaRisco;
   probabilidadeEvasao: number;
@@ -21,34 +27,18 @@ function clamp(value: number, min = 0, max = 100) {
 }
 
 /**
- * Modelo preditivo v2 (explicável).
- * Combina score atual com pressão de tendência para projetar risco em 14 dias.
- * Não substitui um modelo treinado com histórico longitudinal — é a ponte.
+ * Modelo preditivo explicável.
+ * Aceita pesos calibrados a partir do histórico longitudinal.
  */
 export function calcularRiscoPreditivo(
-  indicadores: IndicadoresAluno
+  indicadores: IndicadoresAluno,
+  options?: { pesos?: Partial<PesosRisco> | null; versao?: string }
 ): ResultadoPreditivo {
-  const base = calcularRisco(indicadores);
+  const pesos = normalizePesos(options?.pesos ?? DEFAULT_PESOS);
+  const versao = options?.versao?.trim() || "v2";
+  const base = calcularRisco(indicadores, pesos);
+  const pressao = pressaoTendencia(indicadores, pesos);
 
-  let pressao = 0;
-
-  if (indicadores.faltasConsecutivas >= 3) {
-    pressao += indicadores.faltasConsecutivas * 3;
-  }
-  if (indicadores.frequencia < 80) {
-    pressao += (80 - indicadores.frequencia) * 0.6;
-  }
-  if (indicadores.desempenho < 6) {
-    pressao += (6 - indicadores.desempenho) * 4;
-  }
-  if (indicadores.participacao < 50) {
-    pressao += (50 - indicadores.participacao) * 0.25;
-  }
-  if (indicadores.ocorrencias > 0) {
-    pressao += indicadores.ocorrencias * 2;
-  }
-
-  // Intervenções não entram aqui; o repositório pode atenuar depois.
   const projecao14d = clamp(Math.round(base.percentual + pressao * 0.45));
   const delta = projecao14d - base.percentual;
 
@@ -86,18 +76,21 @@ export function calcularRiscoPreditivo(
 
   return {
     ...base,
-    versao: "v2",
+    versao,
     projecao14d,
     tendencia,
     probabilidadeEvasao,
     planoSugerido,
-    explicacao: `${base.explicacao} ${tendenciaTexto} Probabilidade estimada de evasão: ${probabilidadeEvasao}%.`,
+    explicacao: `${base.explicacao} ${tendenciaTexto} Probabilidade estimada de evasão: ${probabilidadeEvasao}%. Modelo ${versao}.`,
     nivel: classificarRisco(base.percentual),
   };
 }
 
-export function resumoPreditivoAluno(aluno: Aluno): ResultadoPreditivo {
-  return calcularRiscoPreditivo(aluno);
+export function resumoPreditivoAluno(
+  aluno: Aluno,
+  options?: { pesos?: Partial<PesosRisco> | null; versao?: string }
+): ResultadoPreditivo {
+  return calcularRiscoPreditivo(aluno, options);
 }
 
 export function textoTendencia(tendencia: TendenciaRisco) {

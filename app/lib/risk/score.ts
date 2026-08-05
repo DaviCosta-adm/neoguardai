@@ -1,4 +1,10 @@
 import type { IndicadoresAluno, RiskLevel } from "@/app/lib/types";
+import {
+  DEFAULT_PESOS,
+  listarContribuicoesBase,
+  normalizePesos,
+  type PesosRisco,
+} from "@/app/lib/risk/weights";
 
 export interface ResultadoRisco {
   percentual: number;
@@ -19,54 +25,24 @@ export function classificarRisco(percentual: number): RiskLevel {
 }
 
 /**
- * Pontuação inicial explicável (v1).
- * Futuramente pode evoluir para modelo preditivo treinado.
+ * Pontuação explicável com pesos calibráveis.
+ * Pesos default (=1) reproduzem o comportamento histórico do v1/v2.
  */
-export function calcularRisco(indicadores: IndicadoresAluno): ResultadoRisco {
+export function calcularRisco(
+  indicadores: IndicadoresAluno,
+  pesosInput?: Partial<PesosRisco> | null
+): ResultadoRisco {
+  const pesos = normalizePesos(pesosInput ?? DEFAULT_PESOS);
+  const contribuicoes = listarContribuicoesBase(indicadores);
   const fatores: string[] = [];
   let pontos = 0;
 
-  if (indicadores.frequencia < 75) {
-    pontos += 30;
-    fatores.push("Frequência abaixo de 75%");
-  } else if (indicadores.frequencia < 85) {
-    pontos += 18;
-    fatores.push("Frequência em queda (abaixo de 85%)");
+  for (const item of contribuicoes) {
+    pontos += item.pontosBase * pesos[item.chave];
+    fatores.push(item.rotulo);
   }
 
-  if (indicadores.faltasConsecutivas >= 5) {
-    pontos += 25;
-    fatores.push(`${indicadores.faltasConsecutivas} faltas consecutivas`);
-  } else if (indicadores.faltasConsecutivas >= 3) {
-    pontos += 15;
-    fatores.push(`${indicadores.faltasConsecutivas} faltas consecutivas`);
-  }
-
-  if (indicadores.desempenho < 5) {
-    pontos += 20;
-    fatores.push("Desempenho abaixo da média");
-  } else if (indicadores.desempenho < 6.5) {
-    pontos += 10;
-    fatores.push("Queda recente no desempenho");
-  }
-
-  if (indicadores.ocorrencias >= 3) {
-    pontos += 15;
-    fatores.push("Múltiplas ocorrências registradas");
-  } else if (indicadores.ocorrencias >= 1) {
-    pontos += 8;
-    fatores.push("Ocorrências recentes");
-  }
-
-  if (indicadores.participacao < 40) {
-    pontos += 12;
-    fatores.push("Baixa participação em sala");
-  } else if (indicadores.participacao < 60) {
-    pontos += 6;
-    fatores.push("Participação reduzida");
-  }
-
-  const percentual = clamp(pontos);
+  const percentual = clamp(Math.round(pontos));
   const nivel = classificarRisco(percentual);
 
   const recomendacao =

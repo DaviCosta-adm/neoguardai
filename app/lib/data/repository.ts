@@ -13,6 +13,8 @@ import {
   type IntervencaoRow,
   type TimelineRow,
 } from "@/app/lib/data/mappers";
+import { getPesosAtivos } from "@/app/lib/data/modelo-risco";
+import { registrarSnapshotRisco } from "@/app/lib/data/risco-snapshots";
 import { query } from "@/app/lib/db/client";
 import type {
   Alerta,
@@ -274,6 +276,19 @@ export async function registrarIntervencao(
        WHERE id = $1`,
       [input.alunoId, agora]
     );
+  }
+
+  try {
+    const { pesos, versao } = await getPesosAtivos();
+    await registrarSnapshotRisco({
+      aluno,
+      origem: "intervencao",
+      pesos,
+      versao,
+      capturadoEm: agora,
+    });
+  } catch (error) {
+    console.error("Falha ao registrar snapshot de risco:", error);
   }
 
   return {
