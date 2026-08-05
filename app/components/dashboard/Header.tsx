@@ -1,7 +1,8 @@
-import { Bell, Search } from "lucide-react";
 import LogoutButton from "@/app/components/dashboard/LogoutButton";
+import QuickSearch from "@/app/components/dashboard/QuickSearch";
 import { requireAuth } from "@/app/lib/auth/dal";
 import { rotuloRole } from "@/app/lib/data/labels";
+import { Bell } from "lucide-react";
 
 export default async function Header({
   title,
@@ -33,10 +34,7 @@ export default async function Header({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex min-w-[220px] flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-gray-400 lg:flex-none">
-            <Search size={15} />
-            <span>Busca rápida (em breve)</span>
-          </div>
+          {auth.user.role !== "admin_neoguard" ? <QuickSearch /> : null}
 
           <button
             type="button"

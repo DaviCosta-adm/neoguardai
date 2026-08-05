@@ -148,6 +148,35 @@ export default function ModeloRiscoPanel({
           >
             Preencher outcomes
           </button>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() =>
+              startTransition(() => {
+                void (async () => {
+                  setError(null);
+                  setMessage(null);
+                  const response = await fetch("/api/cron/risco-snapshots", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({}),
+                  });
+                  const data = await response.json();
+                  if (!response.ok) {
+                    setError(data.error ?? "Falha no batch de snapshots.");
+                    return;
+                  }
+                  setMessage(
+                    `${data.capturados ?? 0} snapshots capturados (batch).`
+                  );
+                  startTransition(() => router.refresh());
+                })();
+              })
+            }
+            className="rounded-xl border border-white/10 px-4 py-2.5 text-sm text-gray-200 transition hover:border-cyan-400/30 disabled:opacity-60"
+          >
+            Rodar batch de snapshots
+          </button>
         </div>
       </section>
 

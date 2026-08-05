@@ -6,6 +6,7 @@ import { registrarSnapshotRisco } from "@/app/lib/data/risco-snapshots";
 import { getAlunoById } from "@/app/lib/data/repository";
 import { query } from "@/app/lib/db/client";
 import { calcularRiscoPreditivo } from "@/app/lib/risk/predictive";
+import { notificarRiscoCritico } from "@/app/lib/email/alerts";
 
 export async function POST(request: Request) {
   try {
@@ -73,6 +74,18 @@ export async function POST(request: Request) {
       versao,
       capturadoEm: agora,
     });
+
+    try {
+      await notificarRiscoCritico({
+        aluno,
+        nivelAnterior: aluno.riscoNivel,
+        percentual: preditivo.percentual,
+        nivel: preditivo.nivel,
+        explicacao: preditivo.explicacao,
+      });
+    } catch (error) {
+      console.error("Falha ao notificar risco crítico:", error);
+    }
 
     revalidatePath(`/dashboard/alunos/${aluno.id}`);
     revalidatePath("/dashboard");
